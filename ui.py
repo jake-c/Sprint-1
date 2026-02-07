@@ -3,14 +3,17 @@
 # No game rules or file logic should be here.
 
 import tkinter as tk
+from tkinter import messagebox
 import random
 from logic import GameLogic
+from storage import GameStorage
 
 
 class GameUI:
     def __init__(self, size=5):
         self.size = size
         self.logic = GameLogic(size=size)
+        self.game_storage = GameStorage()
 
         # ---- Game state ----
         self.board = [[0 for _ in range(size)] for _ in range(size)]
@@ -73,18 +76,61 @@ class GameUI:
         self.control_frame = tk.Frame(self.root, bg=self.bg_main)
         self.control_frame.pack(pady=16)
 
-        for label in ("Save", "Load", "Reset", "Level 2"):
-            tk.Button(
-                self.control_frame,
-                text=label,
-                width=9,
-                state=tk.DISABLED,
-                relief="solid",
-                borderwidth=1,
-                fg=self.text_primary,
-                bg="#eef1f5",
-                disabledforeground="#9ca3af"
-            ).pack(side=tk.LEFT, padx=6)
+        tk.Button(
+            self.control_frame,
+            text="Save",
+            width=9,
+            relief="solid",
+            borderwidth=1,
+            fg=self.text_primary,
+            bg="#eef1f5",
+            disabledforeground="#9ca3af",
+            command=self.save_game_data
+        ).pack(side=tk.LEFT, padx=6)
+        tk.Button(
+            self.control_frame,
+            text="Load",
+            width=9,
+            relief="solid",
+            borderwidth=1,
+            fg=self.text_primary,
+            bg="#eef1f5",
+            disabledforeground="#9ca3af",
+            command=self.load_game_data
+        ).pack(side=tk.LEFT, padx=6)
+        tk.Button(
+            self.control_frame,
+            text="Undo",
+            width=9,
+            relief="solid",
+            borderwidth=1,
+            fg=self.text_primary,
+            bg="#eef1f5",
+            disabledforeground="#9ca3af",
+            command=self.undo_game_data
+        ).pack(side=tk.LEFT, padx=6)
+        tk.Button(
+            self.control_frame,
+            text="Reset",
+            width=9,
+            relief="solid",
+            borderwidth=1,
+            fg=self.text_primary,
+            bg="#eef1f5",
+            disabledforeground="#9ca3af",
+            command=self.reset_game_data
+        ).pack(side=tk.LEFT, padx=6)
+        tk.Button(
+            self.control_frame,
+            text="Level 2",
+            width=9,
+            state=tk.DISABLED,
+            relief="solid",
+            borderwidth=1,
+            fg=self.text_primary,
+            bg="#eef1f5",
+            disabledforeground="#9ca3af"
+        ).pack(side=tk.LEFT, padx=6)
 
     # ---------------- UI helpers ----------------
 
@@ -149,11 +195,46 @@ class GameUI:
         self.next_number += 1
         self.refresh_board()
 
+    # ---------------- Utils --------------------
+    def load_game_data(self):
+        try:
+            [board, next_number, score] = self.game_storage.load("savefile", 5)
+            self.board = board
+            self.next_number = next_number
+            self.score = score
+            self.game_over = False
+            self.refresh_board()
+            messagebox.showinfo(title="Success", message="Game loaded successfully!")
+        except:
+            messagebox.showerror(title="Error", message="Failed to load")
+    
+    def save_game_data(self):
+        try:
+            self.game_storage.save(
+                    "savefile", self.board, self.next_number, self.score)
+            messagebox.showinfo(title="Success!", message="Game saved successfully!")
+        except Exception:
+            messagebox.showerror(title="Error", message="Failed to save")
+
+    def undo_game_data(self):
+        self.board = [[0 for _ in range(self.size)] for _ in range(self.size)]
+        self.next_number = 1
+        self.score = 0
+        self.game_over = False
+
+    def reset_game_data(self):
+        self.board = [[0 for _ in range(self.size)] for _ in range(self.size)]
+        self.next_number = 1
+        self.score = 0
+        self.game_over = False
+
+        # ---- Place first number randomly ----
+        r = random.randint(0, self.size - 1)
+        c = random.randint(0, self.size - 1)
+        self.board[r][c] = 1
+        self.next_number = 2
+
+        self.refresh_board()
+
     def start(self):
         self.root.mainloop()
-
-
-
-
-
-
