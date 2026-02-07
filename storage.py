@@ -35,3 +35,21 @@ class GameStorage:
             board.append([int(x) for x in parts])
 
         return board, next_number, score
+            
+    # User Story 7: log completed games
+    def log_completed_game(self, name, level, score, board, filename="completed_games.log"):
+        from datetime import datetime
+
+        with open(filename, "a", encoding="utf-8") as f:
+            f.write("=== Completed Game ===\n")
+            f.write(f"Player: {name}\n")
+            f.write(f"Date/Time: {datetime.now()}\n")
+            f.write(f"Level: {level}\n")
+            f.write(f"Score: {score}\n")
+            f.write("Board:\n")
+            for row in board:
+                f.write(" ".join(str(x) for x in row) + "\n")
+            f.write("\n")
+
+        
+
