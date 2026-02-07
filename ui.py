@@ -3,7 +3,7 @@
 # No game rules or file logic should be here.
 
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, simpledialog
 import random
 from logic import GameLogic
 from storage import GameStorage
@@ -21,6 +21,9 @@ class GameUI:
         self.next_number = 1
         self.score = 0
         self.game_over = False
+        self.level = 1                 #for Story 7 logging
+        self.one_pos = None            #remembers where the original 1 is placed (Story 4)
+
 
         # ---- Color palette (light theme) ----
         self.bg_main = "#f7f8fa"
@@ -70,6 +73,8 @@ class GameUI:
         c = random.randint(0, size - 1)
         self.board[r][c] = 1
         self.next_number = 2
+        self.one_pos = (r, c)
+
 
         self.refresh_board()
 
@@ -175,8 +180,13 @@ class GameUI:
                     )
 
         self.score_label.config(text=f"Score: {self.score}")
+        
 
     # ---------------- Game interaction ----------------
+    def check_level_complete(self):
+        #Level 1 completes when 1..25 are placed; then next_number becomes 26
+        return self.next_number == 26
+
 
     def on_cell_click(self, row, col):
         if self.game_over:
@@ -199,7 +209,25 @@ class GameUI:
         self.score += points
         self.next_number += 1
         self.refresh_board()
+        
+        # User Story 7: log game when a level completes successfully
+        if self.check_level_complete():
+            name = simpledialog.askstring("Level Complete", "Level complete!\nEnter player name to log:")
+            if not name:
+                name = "Unknown"
 
+            try:
+                self.game_storage.log_completed_game(
+                    name=name,
+                    level=self.level,
+                    score=self.score,
+                    board=self.board
+                )
+                messagebox.showinfo("Logged", "Completed game logged successfully!")
+            except Exception:
+                messagebox.showerror("Error", "Failed to write game log.")
+
+        
     # Loading game info
     def load_game_data(self):
         try:
@@ -240,20 +268,29 @@ class GameUI:
         except Exception:
             messagebox.showerror(title="Error", message="Cannot undo a move")
 
-    # Reset game function
+    # Reset game function (User Story 4)
     def reset_game_data(self):
+        keep_same = messagebox.askyesno(
+            "Reset Game",
+            "Keep number 1 in the same original cell?\n\nYes = keep same\nNo = randomly re-allocate"
+        )
+
         self.board = [[0 for _ in range(self.size)] for _ in range(self.size)]
         self.next_number = 1
         self.score = 0
         self.game_over = False
 
-        # ---- Place first number randomly ----
-        r = random.randint(0, self.size - 1)
-        c = random.randint(0, self.size - 1)
+        if keep_same and self.one_pos is not None:
+            r, c = self.one_pos
+        else:
+            r = random.randint(0, self.size - 1)
+            c = random.randint(0, self.size - 1)
+            self.one_pos = (r, c)
+
         self.board[r][c] = 1
         self.next_number = 2
-
         self.refresh_board()
 
-    def start(self):
-        self.root.mainloop()
+
+   
+ 
