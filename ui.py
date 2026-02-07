@@ -7,6 +7,7 @@ from tkinter import messagebox
 import random
 from logic import GameLogic
 from storage import GameStorage
+import winsound
 
 
 class GameUI:
@@ -177,7 +178,8 @@ class GameUI:
 
     def on_cell_click(self, row, col):
         if self.game_over:
-            return
+            messagebox.showinfo(
+                title="Error!", message="Incorrect move")
 
         ok, points, _ = self.logic.place_number(
             self.board,
@@ -187,8 +189,9 @@ class GameUI:
         )
 
         if not ok:
-            self.game_over = True
-            self.root.title(f"Game Over – Final Score: {self.score}")
+            self.game_over = False
+            # Error sound
+            winsound.Beep(110, 900)
             return
 
         self.score += points
@@ -199,28 +202,39 @@ class GameUI:
     def load_game_data(self):
         try:
             [board, next_number, score] = self.game_storage.load("savefile", 5)
+            # Loading previous history
             self.board = board
             self.next_number = next_number
             self.score = score
             self.game_over = False
-            self.refresh_board()
-            messagebox.showinfo(title="Success", message="Game loaded successfully!")
+            self.refresh_board()    
+            messagebox.showinfo(
+                title="Success", message="Game loaded successfully!")
         except:
             messagebox.showerror(title="Error", message="Failed to load")
-    
+
     def save_game_data(self):
         try:
             self.game_storage.save(
-                    "savefile", self.board, self.next_number, self.score)
-            messagebox.showinfo(title="Success!", message="Game saved successfully!")
+                "savefile", self.board, self.next_number, self.score)
+            messagebox.showinfo(
+                title="Success!", message="Game saved successfully!")
         except Exception:
             messagebox.showerror(title="Error", message="Failed to save")
 
     def undo_game_data(self):
-        self.board = [[0 for _ in range(self.size)] for _ in range(self.size)]
-        self.next_number = 1
-        self.score = 0
-        self.game_over = False
+        try:
+            [success, score_change] = self.logic.undo(self.board)
+            if success:
+                self.score += score_change
+                self.next_number -= 1
+                self.game_over = False
+                self.refresh_board()
+            else:
+                messagebox.showerror(
+                    title="Error", message="Cannot undo a move")
+        except Exception:
+            messagebox.showerror(title="Error", message="Cannot undo a move")
 
     def reset_game_data(self):
         self.board = [[0 for _ in range(self.size)] for _ in range(self.size)]

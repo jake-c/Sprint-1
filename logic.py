@@ -6,6 +6,7 @@ class GameLogic:
     def __init__(self, size=5):
         # size of the board (5x5)
         self.size = size
+        self.turns = []
 
     def is_in_bounds(self, r, c):
         # check if a cell is inside the board boundaries
@@ -41,6 +42,20 @@ class GameLogic:
         pr, pc = prev_pos
         return 1 if (r, c) in self.diagonal_corners(pr, pc) else 0
 
+    def undo(self, board):
+        if (len(self.turns) == 0):
+            raise Exception("No turns to undo. Make a turn")
+            return False
+        else:
+            removed_element = self.turns.pop()
+            r = removed_element[0]
+            c = removed_element[1]
+            board[r][c] = 0
+            points = 0
+            if (self.score_for_placement(board, len(self.turns) + 1, r, c) == 1):
+                points -= 1
+            return True, points
+
     def place_number(self, board, number, r, c):
         """
         Attempt to place a number on the board.
@@ -53,11 +68,11 @@ class GameLogic:
 
         # Invalid placement: outside board
         if not self.is_in_bounds(r, c):
-            return (False, 0, "Invalid: out of bounds. Game over.")
+            return (False, 0, "Invalid: out of bounds. Try again.")
 
         # Invalid placement: cell already filled
         if board[r][c] != 0:
-            return (False, 0, "Invalid: cell already filled. Game over.")
+            return (False, 0, "Invalid: cell already filled. Try again.")
 
         # Enforce adjacency rule for all numbers after 1
         if number > 1:
@@ -71,7 +86,7 @@ class GameLogic:
 
             # Must be one step away (including diagonals), but not same cell
             if row_diff > 1 or col_diff > 1 or (row_diff == 0 and col_diff == 0):
-                return (False, 0, "Invalid: not adjacent to predecessor. Game over.")
+                return (False, 0, "Invalid: not adjacent to predecessor. Try again")
 
         # Calculate score
         points = 0
@@ -80,6 +95,5 @@ class GameLogic:
 
         # Place the number
         board[r][c] = number
+        self.turns.append((r, c))
         return (True, points, f"Placed {number} at ({r+1},{c+1}).")
-
-
