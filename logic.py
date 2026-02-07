@@ -6,6 +6,7 @@ class GameLogic:
     def __init__(self, size=5):
         # size of the board (5x5)
         self.size = size
+        # the number of turns made
         self.turns = []
 
     def is_in_bounds(self, r, c):
@@ -42,16 +43,18 @@ class GameLogic:
         pr, pc = prev_pos
         return 1 if (r, c) in self.diagonal_corners(pr, pc) else 0
 
+    # Function for undo command
     def undo(self, board):
         if (len(self.turns) == 0):
             raise Exception("No turns to undo. Make a turn")
             return False
         else:
-            removed_element = self.turns.pop()
+            removed_element = self.turns.pop() # save the data of the current element and remove it
             r = removed_element[0]
             c = removed_element[1]
             board[r][c] = 0
             points = 0
+            # Check if the score needs to be reduced
             if (self.score_for_placement(board, len(self.turns) + 1, r, c) == 1):
                 points -= 1
             return True, points

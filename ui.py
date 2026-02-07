@@ -135,6 +135,7 @@ class GameUI:
 
     # ---------------- UI helpers ----------------
 
+    # Function to visualize the board
     def draw_board(self):
         for r in range(self.size):
             row = []
@@ -157,6 +158,7 @@ class GameUI:
                 row.append(btn)
             self.buttons.append(row)
 
+    # Function to refresh board
     def refresh_board(self):
         for r in range(self.size):
             for c in range(self.size):
@@ -198,11 +200,11 @@ class GameUI:
         self.next_number += 1
         self.refresh_board()
 
-    # ---------------- Utils --------------------
+    # Loading game info
     def load_game_data(self):
         try:
             [board, next_number, score] = self.game_storage.load("savefile", 5)
-            # Loading previous history
+            # Loading previous game
             self.board = board
             self.next_number = next_number
             self.score = score
@@ -213,6 +215,7 @@ class GameUI:
         except:
             messagebox.showerror(title="Error", message="Failed to load")
 
+    # Saving game info
     def save_game_data(self):
         try:
             self.game_storage.save(
@@ -222,6 +225,7 @@ class GameUI:
         except Exception:
             messagebox.showerror(title="Error", message="Failed to save")
 
+    # Undo function
     def undo_game_data(self):
         try:
             [success, score_change] = self.logic.undo(self.board)
@@ -236,6 +240,7 @@ class GameUI:
         except Exception:
             messagebox.showerror(title="Error", message="Cannot undo a move")
 
+    # Reset game function
     def reset_game_data(self):
         self.board = [[0 for _ in range(self.size)] for _ in range(self.size)]
         self.next_number = 1
