@@ -72,6 +72,7 @@ class GameUI:
         r = random.randint(0, size - 1)
         c = random.randint(0, size - 1)
         self.board[r][c] = 1
+        self.logic.turns.append((r, c))
         self.next_number = 2
         self.one_pos = (r, c)
 
@@ -245,6 +246,24 @@ class GameUI:
             self.next_number = next_number
             self.score = score
             self.game_over = False
+
+            self.logic.turns = []
+
+            loaded_positions = {}
+            for r in range(self.size):
+                for c in range (self.size):
+                    value = self.board[r][c]
+                    if value != 0:
+                        loaded_positions[value] = (r, c)
+            
+            # Filling logic turns in order: 1, 2, 3, ... up to (next number - 1)
+            for i in range(1, self.next_number):
+                if i in loaded_positions:
+                    self.logic.turns.append(loaded_positions[i])
+
+                    if i == 1:
+                        self.one_pos = loaded_positions[i]
+
             self.refresh_board()    
             messagebox.showinfo(
                 title="Success", message="Game loaded successfully!")
@@ -278,12 +297,17 @@ class GameUI:
 
     # Reset game function (User Story 4)
     def reset_game_data(self):
+        # A message to the user
         keep_same = messagebox.askyesno(
             "Reset Game",
             "Keep number 1 in the same original cell?\n\nYes = keep same\nNo = randomly re-allocate"
         )
 
         self.board = [[0 for _ in range(self.size)] for _ in range(self.size)]
+        
+        # First, clear logic history
+        self.logic.turns = []
+
         self.next_number = 1
         self.score = 0
         self.game_over = False
@@ -296,8 +320,14 @@ class GameUI:
             self.one_pos = (r, c)
 
         self.board[r][c] = 1
+
+        self.logic.turns.append((r, c))
+
         self.next_number = 2
         self.refresh_board()
+
+    def start(self):
+        self.root.mainloop()
 
 
    
