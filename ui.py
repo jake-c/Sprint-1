@@ -14,25 +14,18 @@ import os
 def play_sound(success):
     system_name = platform.system()
 
-    # For windows:
     if system_name == "Windows":
         try:
             import winsound
-            if success:
-                winsound.Beep(700, 200)
-            else:
-                winsound.Beep(200, 400)
+            winsound.Beep(700 if success else 200, 200 if success else 400)
         except ImportError:
             pass
-
-    # For macOS:
     elif system_name == "Darwin":
-        if success:
-            os.system("afplay /System/Library/Sounds/Glass.aiff &")
-        else:
-            os.system("afplay /System/Library/Sounds/Basso.aiff &")
-
-    # For Linux:
+        os.system(
+            "afplay /System/Library/Sounds/Glass.aiff &"
+            if success
+            else "afplay /System/Library/Sounds/Basso.aiff &"
+        )
     elif system_name == "Linux":
         print('\a')
 
@@ -48,9 +41,8 @@ class GameUI:
         self.next_number = 1
         self.score = 0
         self.game_over = False
-        self.level = 1                 #for Story 7 logging
-        self.one_pos = None            #remembers where the original 1 is placed (Story 4)
-
+        self.level = 1
+        self.one_pos = None
 
         # ---- Color palette (light theme) ----
         self.bg_main = "#f7f8fa"
@@ -58,7 +50,6 @@ class GameUI:
         self.bg_tile_filled = "#e8f0fe"
         self.bg_hover = "#dde7f5"
         self.text_primary = "#1f2933"
-        self.border_soft = "#d1d5db"
 
         # ---- Window ----
         self.root = tk.Tk()
@@ -88,10 +79,9 @@ class GameUI:
         )
         self.level_label.pack(side=tk.LEFT, padx=20)
 
-        # ---- Next number Label ----
         self.next_label = tk.Label(
             self.info_frame,
-            text="Next: 2",
+            text="Next: 1",
             font=("Helvetica", 14, "bold"),
             fg="blue",
             bg=self.bg_main
@@ -113,72 +103,23 @@ class GameUI:
         self.next_number = 2
         self.one_pos = (r, c)
 
-
         self.refresh_board()
 
-        # ---- Bottom controls (scaffold only) ----
+        # ---- Bottom controls ----
         self.control_frame = tk.Frame(self.root, bg=self.bg_main)
         self.control_frame.pack(pady=16)
 
-        tk.Button(
-            self.control_frame,
-            text="Save",
-            width=9,
-            relief="solid",
-            borderwidth=1,
-            fg=self.text_primary,
-            bg="#eef1f5",
-            disabledforeground="#9ca3af",
-            command=self.save_game_data
-        ).pack(side=tk.LEFT, padx=6)
-        tk.Button(
-            self.control_frame,
-            text="Load",
-            width=9,
-            relief="solid",
-            borderwidth=1,
-            fg=self.text_primary,
-            bg="#eef1f5",
-            disabledforeground="#9ca3af",
-            command=self.load_game_data
-        ).pack(side=tk.LEFT, padx=6)
-        tk.Button(
-            self.control_frame,
-            text="Undo",
-            width=9,
-            relief="solid",
-            borderwidth=1,
-            fg=self.text_primary,
-            bg="#eef1f5",
-            disabledforeground="#9ca3af",
-            command=self.undo_game_data
-        ).pack(side=tk.LEFT, padx=6)
-        tk.Button(
-            self.control_frame,
-            text="Reset",
-            width=9,
-            relief="solid",
-            borderwidth=1,
-            fg=self.text_primary,
-            bg="#eef1f5",
-            disabledforeground="#9ca3af",
-            command=self.reset_game_data
-        ).pack(side=tk.LEFT, padx=6)
-        tk.Button(
-            self.control_frame,
-            text="Level 2",
-            width=9,
-            state=tk.DISABLED,
-            relief="solid",
-            borderwidth=1,
-            fg=self.text_primary,
-            bg="#eef1f5",
-            disabledforeground="#9ca3af"
-        ).pack(side=tk.LEFT, padx=6)
+        tk.Button(self.control_frame, text="Save", width=9,
+                  command=self.save_game_data).pack(side=tk.LEFT, padx=6)
+        tk.Button(self.control_frame, text="Load", width=9,
+                  command=self.load_game_data).pack(side=tk.LEFT, padx=6)
+        tk.Button(self.control_frame, text="Undo", width=9,
+                  command=self.undo_game_data).pack(side=tk.LEFT, padx=6)
+        tk.Button(self.control_frame, text="Reset", width=9,
+                  command=self.reset_game_data).pack(side=tk.LEFT, padx=6)
 
     # ---------------- UI helpers ----------------
 
-    # Function to visualize the board
     def draw_board(self):
         for r in range(self.size):
             row = []
@@ -194,197 +135,99 @@ class GameUI:
                     activebackground=self.bg_hover,
                     relief="solid",
                     borderwidth=1,
-                    highlightthickness=0,
                     command=lambda r=r, c=c: self.on_cell_click(r, c)
                 )
                 btn.grid(row=r, column=c, padx=4, pady=4)
                 row.append(btn)
             self.buttons.append(row)
 
-    # Function to refresh board
     def refresh_board(self):
         for r in range(self.size):
             for c in range(self.size):
                 val = self.board[r][c]
-                if val != 0:
-                    self.buttons[r][c].config(
-                        text=str(val),
-                        bg=self.bg_tile_filled
-                    )
-                else:
-                    self.buttons[r][c].config(
-                        text="",
-                        bg=self.bg_tile_empty
-                    )
+                self.buttons[r][c].config(
+                    text=str(val) if val != 0 else "",
+                    bg=self.bg_tile_filled if val != 0 else self.bg_tile_empty
+                )
 
-        # The score and next number to be placed
         self.score_label.config(text=f"Score: {self.score}")
         self.next_label.config(text=f"Next: {self.next_number}")
-        
 
     # ---------------- Game interaction ----------------
-    def check_level_complete(self):
-        # Level 1 completes when 1..25 are placed; then next_number becomes 26
-        return self.next_number == 26
-
 
     def on_cell_click(self, row, col):
-        if self.game_over:
-            messagebox.showinfo(title="Error!", message="Incorrect move")
-            
-        # For user story 3: the user must enter the number manually
-        user_input = simpledialog.askinteger(
-            "Enter Number",
-            f"Enter the next number ({self.next_number}):",
-            parent=self.root,
-            minvalue=1
-        )
-
-        if user_input is None:
-            return
-
-        # Getting the results of placing the number
-        ok, points, _ = self.logic.place_number(
+        ok, points, message = self.logic.place_number(
             self.board,
-            user_input,
+            self.next_number,
             row,
             col
         )
 
-        # If the placement was legal:
         if ok:
-            # User Story 2: play a sound effect for correct placements
             play_sound(success=True)
-
-            # Update the score, next number, and refresh the board
             self.score += points
             self.next_number += 1
             self.refresh_board()
-        
-            # User Story 7: log game when a level completes successfully
-            if self.check_level_complete():
-                play_sound(success=True)
-                name = simpledialog.askstring("Level Complete", "Level complete!\nEnter player name to log:")
-                if not name:
-                    name = "Unknown"
-
-                try:
-                    self.game_storage.log_completed_game(
-                        name=name,
-                        level=self.level,
-                        score=self.score,
-                        board=self.board
-                    )
-                    messagebox.showinfo("Logged", "Completed game logged successfully!")
-                except Exception:
-                    messagebox.showerror("Error", "Failed to write game log.")
         else:
-            # If the move was not valid, play incorrect sound and continue
-            self.game_over = False
             play_sound(success=False)
+            messagebox.showinfo("Invalid Move", message)
 
-
-        
-    # Loading game info
     def load_game_data(self):
         try:
-            [board, next_number, score] = self.game_storage.load("savefile", self.size)
-            # Loading previous game board, next number, and score
+            board, next_number, score = self.game_storage.load("savefile", self.size)
             self.board = board
             self.next_number = next_number
             self.score = score
-            self.game_over = False
-
-            # Starting with clean turns, and then adding loaded positions
             self.logic.turns = []
 
-            loaded_positions = {}
+            positions = {}
             for r in range(self.size):
-                for c in range (self.size):
-                    value = self.board[r][c]
-                    if value != 0:
-                        loaded_positions[value] = (r, c)
-            
-            # Filling logic turns in order: 1, 2, 3, ... up to (next number - 1)
-            for i in range(1, self.next_number):
-                if i in loaded_positions:
-                    self.logic.turns.append(loaded_positions[i])
+                for c in range(self.size):
+                    if board[r][c] != 0:
+                        positions[board[r][c]] = (r, c)
 
+            for i in range(1, next_number):
+                if i in positions:
+                    self.logic.turns.append(positions[i])
                     if i == 1:
-                        self.one_pos = loaded_positions[i]
-            
-            # Refresh the board after changes
-            self.refresh_board()    
-            messagebox.showinfo(
-                title="Success", message="Game loaded successfully!")
-        except:
-            messagebox.showerror(title="Error", message="Failed to load")
+                        self.one_pos = positions[i]
 
-    # Saving game info
-    def save_game_data(self):
-        # Saving the board, next number, and score in the savefile
-        try:
-            self.game_storage.save(
-                "savefile", self.board, self.next_number, self.score)
-            messagebox.showinfo(
-                title="Success!", message="Game saved successfully!")
+            self.refresh_board()
+            messagebox.showinfo("Success", "Game loaded successfully!")
         except Exception:
-            messagebox.showerror(title="Error", message="Failed to save")
+            messagebox.showerror("Error", "Failed to load")
 
-    # Undo function
-    def undo_game_data(self):
-        # Undoing a move means reducing score if necessary, decreasing next number, and refreshing the board
+    def save_game_data(self):
         try:
-            [success, score_change] = self.logic.undo(self.board)
+            self.game_storage.save("savefile", self.board, self.next_number, self.score)
+            messagebox.showinfo("Success", "Game saved successfully!")
+        except Exception:
+            messagebox.showerror("Error", "Failed to save")
+
+    def undo_game_data(self):
+        try:
+            success, score_change = self.logic.undo(self.board)
             if success:
                 self.score += score_change
                 self.next_number -= 1
-                self.game_over = False
                 self.refresh_board()
-            else:
-                messagebox.showerror(
-                    title="Error", message="Cannot undo a move")
         except Exception:
-            messagebox.showerror(title="Error", message="Cannot undo a move")
+            messagebox.showerror("Error", "Cannot undo")
 
-    # Reset game function (User Story 4)
     def reset_game_data(self):
-        # A message to the user
         if not messagebox.askyesno("Reset Game", "Are you sure you want to reset the board?"):
             return
 
-        # Clean the board
         self.board = [[0 for _ in range(self.size)] for _ in range(self.size)]
-        
-        # First, clear logic history
         self.logic.turns = []
-
-        # Make the next number 1, score as 0
-        self.next_number = 1
         self.score = 0
-        self.game_over = False
+        self.next_number = 1
 
-        # Position the first number where it was initially
-        if self.one_pos:
-            r, c = self.one_pos
-        else:
-            # Must not happen if the game started correctly
-            r = random.randint(0, self.size - 1)
-            c = random.randint(0, self.size - 1)
-            self.one_pos = (r, c)
-
-        # Place number one and add it as a turn
+        r, c = self.one_pos
         self.board[r][c] = 1
         self.logic.turns.append((r, c))
-
-        # Place next number as 2, refresh the board
         self.next_number = 2
         self.refresh_board()
 
-    # Function to start the game. Is used in main.py
     def start(self):
         self.root.mainloop()
-
-
-   
- 
