@@ -200,6 +200,10 @@ class GameUI:
             col
         )
 
+        #User Story 2: play a sound effect for correct placements
+        if ok:
+            winsound.Beep(700, 900)
+
         if not ok:
             self.game_over = False
             # Error sound
@@ -208,6 +212,10 @@ class GameUI:
 
         self.score += points
         self.next_number += 1
+
+        #User Story 3: show a message box that displays the next number
+        messagebox.showinfo(title = "Next Number", message = f"Number {self.next_number} \n")
+
         self.refresh_board()
         
         # User Story 7: log game when a level completes successfully

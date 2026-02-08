@@ -77,6 +77,10 @@ class GameLogic:
         if board[r][c] != 0:
             return (False, 0, "Invalid: cell already filled. Try again.")
 
+        #User story 3(cotd.): Invalid placement: wrong number placed
+        if number != len(self.turns) + 1:
+            return (False, 0, "Invalid: wrong number")
+
         # Enforce adjacency rule for all numbers after 1
         if number > 1:
             prev_pos = self.find_number(board, number - 1)
