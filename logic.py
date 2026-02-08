@@ -45,6 +45,7 @@ class GameLogic:
 
     # Function for undo command
     def undo(self, board):
+        # In case there are no turns yet
         if (len(self.turns) == 0):
             raise Exception("No turns to undo. Make a turn")
             return False
@@ -60,6 +61,7 @@ class GameLogic:
                 if self.score_for_placement(board, prev_number, r, c) == 1:
                     points -= 1
             
+            # For undo, place 0 in the current square
             board[r][c] = 0
             
             return True, points
