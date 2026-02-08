@@ -52,11 +52,16 @@ class GameLogic:
             removed_element = self.turns.pop() # save the data of the current element and remove it
             r = removed_element[0]
             c = removed_element[1]
-            board[r][c] = 0
+            
             points = 0
             # Check if the score needs to be reduced
-            if (self.score_for_placement(board, len(self.turns) + 1, r, c) == 1):
-                points -= 1
+            if len(self.turns) > 0:
+                prev_number = len(self.turns)
+                if self.score_for_placement(board, prev_number, r, c) == 1:
+                    points -= 1
+            
+            board[r][c] = 0
+            
             return True, points
 
     def place_number(self, board, number, r, c):
