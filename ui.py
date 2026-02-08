@@ -10,6 +10,7 @@ from logic import GameLogic
 from storage import GameStorage
 import os
 
+# This function plays sounds according to the OS used
 def play_sound(success):
     system_name = platform.system()
 
@@ -216,13 +217,14 @@ class GameUI:
                         bg=self.bg_tile_empty
                     )
 
+        # The score and next number to be placed
         self.score_label.config(text=f"Score: {self.score}")
         self.next_label.config(text=f"Next: {self.next_number}")
         
 
     # ---------------- Game interaction ----------------
     def check_level_complete(self):
-        #Level 1 completes when 1..25 are placed; then next_number becomes 26
+        # Level 1 completes when 1..25 are placed; then next_number becomes 26
         return self.next_number == 26
 
 
@@ -241,17 +243,20 @@ class GameUI:
         if user_input is None:
             return
 
-        ok, points, message = self.logic.place_number(
+        # Getting the results of placing the number
+        ok, points, _ = self.logic.place_number(
             self.board,
             user_input,
             row,
             col
         )
 
-        # User Story 2: play a sound effect for correct placements
+        # If the placement was legal:
         if ok:
+            # User Story 2: play a sound effect for correct placements
             play_sound(success=True)
 
+            # Update the score, next number, and refresh the board
             self.score += points
             self.next_number += 1
             self.refresh_board()
@@ -274,6 +279,7 @@ class GameUI:
                 except Exception:
                     messagebox.showerror("Error", "Failed to write game log.")
         else:
+            # If the move was not valid, play incorrect sound and continue
             self.game_over = False
             play_sound(success=False)
 
@@ -283,12 +289,13 @@ class GameUI:
     def load_game_data(self):
         try:
             [board, next_number, score] = self.game_storage.load("savefile", self.size)
-            # Loading previous game
+            # Loading previous game board, next number, and score
             self.board = board
             self.next_number = next_number
             self.score = score
             self.game_over = False
 
+            # Starting with clean turns, and then adding loaded positions
             self.logic.turns = []
 
             loaded_positions = {}
@@ -305,7 +312,8 @@ class GameUI:
 
                     if i == 1:
                         self.one_pos = loaded_positions[i]
-
+            
+            # Refresh the board after changes
             self.refresh_board()    
             messagebox.showinfo(
                 title="Success", message="Game loaded successfully!")
@@ -314,6 +322,7 @@ class GameUI:
 
     # Saving game info
     def save_game_data(self):
+        # Saving the board, next number, and score in the savefile
         try:
             self.game_storage.save(
                 "savefile", self.board, self.next_number, self.score)
@@ -324,6 +333,7 @@ class GameUI:
 
     # Undo function
     def undo_game_data(self):
+        # Undoing a move means reducing score if necessary, decreasing next number, and refreshing the board
         try:
             [success, score_change] = self.logic.undo(self.board)
             if success:
@@ -343,29 +353,35 @@ class GameUI:
         if not messagebox.askyesno("Reset Game", "Are you sure you want to reset the board?"):
             return
 
+        # Clean the board
         self.board = [[0 for _ in range(self.size)] for _ in range(self.size)]
         
         # First, clear logic history
         self.logic.turns = []
 
+        # Make the next number 1, score as 0
         self.next_number = 1
         self.score = 0
         self.game_over = False
 
+        # Position the first number where it was initially
         if self.one_pos:
             r, c = self.one_pos
         else:
-            # Shouldn't happen if game started correctly
+            # Must not happen if the game started correctly
             r = random.randint(0, self.size - 1)
             c = random.randint(0, self.size - 1)
             self.one_pos = (r, c)
 
+        # Place number one and add it as a turn
         self.board[r][c] = 1
         self.logic.turns.append((r, c))
 
+        # Place next number as 2, refresh the board
         self.next_number = 2
         self.refresh_board()
 
+    # Function to start the game. Is used in main.py
     def start(self):
         self.root.mainloop()
 
