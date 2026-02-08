@@ -5,9 +5,35 @@
 import tkinter as tk
 from tkinter import messagebox, simpledialog
 import random
+import platform
 from logic import GameLogic
 from storage import GameStorage
-import winsound
+import os
+
+def play_sound(success):
+    system_name = platform.system()
+
+    # For windows:
+    if system_name == "Windows":
+        try:
+            import winsound
+            if success:
+                winsound.Beep(700, 200)
+            else:
+                winsound.Beep(200, 400)
+        except ImportError:
+            pass
+
+    # For macOS:
+    elif system_name == "Darwin":
+        if success:
+            os.system("afplay /System/Library/Sounds/Glass.aiff &")
+        else:
+            os.system("afplay /System/Library/Sounds/Basso.aiff &")
+
+    # For Linux:
+    elif system_name == "Linux":
+        print('\a')
 
 
 class GameUI:
@@ -202,20 +228,20 @@ class GameUI:
 
     def on_cell_click(self, row, col):
         if self.game_over:
-            messagebox.showinfo(
-                title="Error!", message="Incorrect move")
+            messagebox.showinfo(title="Error!", message="Incorrect move")
             
         # For user story 3: the user must enter the number manually
         user_input = simpledialog.askinteger(
             "Enter Number",
             f"Enter the next number ({self.next_number}):",
-            parent=self.root
+            parent=self.root,
+            minvalue=1
         )
 
         if user_input is None:
             return
 
-        ok, points, _ = self.logic.place_number(
+        ok, points, message = self.logic.place_number(
             self.board,
             user_input,
             row,
@@ -224,35 +250,33 @@ class GameUI:
 
         # User Story 2: play a sound effect for correct placements
         if ok:
-            winsound.Beep(700, 900)
+            play_sound(success=True)
 
-        if not ok:
-            self.game_over = False
-            # Error sound
-            winsound.Beep(110, 900)
-            return
-
-        self.score += points
-        self.next_number += 1
-
-        self.refresh_board()
+            self.score += points
+            self.next_number += 1
+            self.refresh_board()
         
-        # User Story 7: log game when a level completes successfully
-        if self.check_level_complete():
-            name = simpledialog.askstring("Level Complete", "Level complete!\nEnter player name to log:")
-            if not name:
-                name = "Unknown"
+            # User Story 7: log game when a level completes successfully
+            if self.check_level_complete():
+                play_sound(success=True)
+                name = simpledialog.askstring("Level Complete", "Level complete!\nEnter player name to log:")
+                if not name:
+                    name = "Unknown"
 
-            try:
-                self.game_storage.log_completed_game(
-                    name=name,
-                    level=self.level,
-                    score=self.score,
-                    board=self.board
-                )
-                messagebox.showinfo("Logged", "Completed game logged successfully!")
-            except Exception:
-                messagebox.showerror("Error", "Failed to write game log.")
+                try:
+                    self.game_storage.log_completed_game(
+                        name=name,
+                        level=self.level,
+                        score=self.score,
+                        board=self.board
+                    )
+                    messagebox.showinfo("Logged", "Completed game logged successfully!")
+                except Exception:
+                    messagebox.showerror("Error", "Failed to write game log.")
+        else:
+            self.game_over = False
+            play_sound(success=False)
+
 
         
     # Loading game info
