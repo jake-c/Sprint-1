@@ -61,6 +61,16 @@ class GameUI:
         )
         self.level_label.pack(side=tk.LEFT, padx=20)
 
+        # ---- Next number Label ----
+        self.next_label = tk.Label(
+            self.info_frame,
+            text="Next: 2",
+            font=("Helvetica", 14, "bold"),
+            fg="blue",
+            bg=self.bg_main
+        )
+        self.next_label.pack(side=tk.LEFT, padx=20)
+
         # ---- Board ----
         self.board_frame = tk.Frame(self.root, bg=self.bg_main)
         self.board_frame.pack(padx=16, pady=10)
@@ -181,6 +191,7 @@ class GameUI:
                     )
 
         self.score_label.config(text=f"Score: {self.score}")
+        self.next_label.config(text=f"Next: {self.next_number}")
         
 
     # ---------------- Game interaction ----------------
@@ -193,15 +204,25 @@ class GameUI:
         if self.game_over:
             messagebox.showinfo(
                 title="Error!", message="Incorrect move")
+            
+        # For user story 3: the user must enter the number manually
+        user_input = simpledialog.askinteger(
+            "Enter Number",
+            f"Enter the next number ({self.next_number}):",
+            parent=self.root
+        )
+
+        if user_input is None:
+            return
 
         ok, points, _ = self.logic.place_number(
             self.board,
-            self.next_number,
+            user_input,
             row,
             col
         )
 
-        #User Story 2: play a sound effect for correct placements
+        # User Story 2: play a sound effect for correct placements
         if ok:
             winsound.Beep(700, 900)
 
@@ -213,9 +234,6 @@ class GameUI:
 
         self.score += points
         self.next_number += 1
-
-        #User Story 3: show a message box that displays the next number
-        messagebox.showinfo(title = "Next Number", message = f"Number {self.next_number} \n")
 
         self.refresh_board()
         
@@ -240,7 +258,7 @@ class GameUI:
     # Loading game info
     def load_game_data(self):
         try:
-            [board, next_number, score] = self.game_storage.load("savefile", 5)
+            [board, next_number, score] = self.game_storage.load("savefile", self.size)
             # Loading previous game
             self.board = board
             self.next_number = next_number
@@ -298,10 +316,8 @@ class GameUI:
     # Reset game function (User Story 4)
     def reset_game_data(self):
         # A message to the user
-        keep_same = messagebox.askyesno(
-            "Reset Game",
-            "Keep number 1 in the same original cell?\n\nYes = keep same\nNo = randomly re-allocate"
-        )
+        if not messagebox.askyesno("Reset Game", "Are you sure you want to reset the board?"):
+            return
 
         self.board = [[0 for _ in range(self.size)] for _ in range(self.size)]
         
@@ -312,15 +328,15 @@ class GameUI:
         self.score = 0
         self.game_over = False
 
-        if keep_same and self.one_pos is not None:
+        if self.one_pos:
             r, c = self.one_pos
         else:
+            # Shouldn't happen if game started correctly
             r = random.randint(0, self.size - 1)
             c = random.randint(0, self.size - 1)
             self.one_pos = (r, c)
 
         self.board[r][c] = 1
-
         self.logic.turns.append((r, c))
 
         self.next_number = 2
