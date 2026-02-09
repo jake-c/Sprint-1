@@ -14,19 +14,17 @@ class GameLogic:
         return 0 <= r < self.size and 0 <= c < self.size
 
     def cell_is_empty(self, board, r, c):
-        # check if a cell exists and is not already filled
-        return self.is_in_bounds(r, c) and board[r][c] == 0
+        return board[r][c] == 0
 
     def find_number(self, board, value):
-        # locate a specific number on the board
-        for r in range(self.size):
-            for c in range(self.size):
+        # locate a specific number on the board (works for 5x5 or 7x7)
+        for r in range(len(board)):
+            for c in range(len(board[0])):
                 if board[r][c] == value:
                     return (r, c)
         return None
 
     def diagonal_corners(self, r, c):
-        # Return the four diagonal corner positions around (r, c)
         return [
             (r - 1, c - 1),
             (r - 1, c + 1),
@@ -35,79 +33,78 @@ class GameLogic:
         ]
 
     def score_for_placement(self, board, prev_num, r, c):
-        # determine if placing the current number earns a point
         prev_pos = self.find_number(board, prev_num)
         if not prev_pos:
             return 0
+        return 1 if (r, c) in self.diagonal_corners(*prev_pos) else 0
 
-        pr, pc = prev_pos
-        return 1 if (r, c) in self.diagonal_corners(pr, pc) else 0
-
-    # Function for undo command
     def undo(self, board):
-        # In case there are no turns yet
-        if (len(self.turns) == 0):
-            raise Exception("No turns to undo. Make a turn")
-            return False
-        else:
-            removed_element = self.turns.pop() # save the data of the current element and remove it
-            r = removed_element[0]
-            c = removed_element[1]
-            
-            points = 0
-            # Check if the score needs to be reduced
-            if len(self.turns) > 0:
-                prev_number = len(self.turns)
-                if self.score_for_placement(board, prev_number, r, c) == 1:
-                    points -= 1
-            
-            # For undo, place 0 in the current square
-            board[r][c] = 0
-            
-            return True, points
+        if not self.turns:
+            raise Exception("No turns to undo.")
+
+        r, c = self.turns.pop()
+        points = 0
+
+        if self.turns:
+            prev_number = len(self.turns)
+            if self.score_for_placement(board, prev_number, r, c):
+                points -= 1
+
+        board[r][c] = 0
+        return True, points
 
     def place_number(self, board, number, r, c):
-        """
-        Attempt to place a number on the board.
-
-        Returns:
-        - ok: whether the placement is valid
-        - points_earned: 1 if diagonal corner rule is satisfied, else 0
-        - message: status message for the UI
-        """
-
-        # Invalid placement: outside board
-        if not self.is_in_bounds(r, c):
-            return (False, 0, "Invalid: out of bounds. Try again.")
-
-        # Invalid placement: cell already filled
         if board[r][c] != 0:
-            return (False, 0, "Invalid: cell already filled. Try again.")
+            return False, 0, "Cell already filled."
 
-        #User story 3(cotd.): Invalid placement: wrong number placed
         if number != len(self.turns) + 1:
-            return (False, 0, "Invalid: wrong number")
+            return False, 0, "Wrong number."
 
-        # Enforce adjacency rule for all numbers after 1
         if number > 1:
-            prev_pos = self.find_number(board, number - 1)
-            if not prev_pos:
-                return (False, 0, "Invalid: predecessor not found.")
+            pr, pc = self.find_number(board, number - 1)
+            if abs(pr - r) > 1 or abs(pc - c) > 1:
+                return False, 0, "Must be adjacent."
 
-            pr, pc = prev_pos
-            row_diff = abs(r - pr)
-            col_diff = abs(c - pc)
-
-            # Must be one step away (including diagonals), but not same cell
-            if row_diff > 1 or col_diff > 1 or (row_diff == 0 and col_diff == 0):
-                return (False, 0, "Invalid: not adjacent to predecessor. Try again")
-
-        # Calculate score
-        points = 0
-        if number > 1:
-            points = self.score_for_placement(board, number - 1, r, c)
-
-        # Place the number
+        points = self.score_for_placement(board, number - 1, r, c) if number > 1 else 0
         board[r][c] = number
         self.turns.append((r, c))
-        return (True, points, f"Placed {number} at ({r+1},{c+1}).")
+        return True, points, ""
+
+    # ---------------- Level 2 helpers ----------------
+    def get_valid_outer_cells(self, board7, inner_pos):
+        """
+        Level 2: given a 7x7 board and the position (r,c) of the target number
+        inside the inner 5x5 (indices 1..5), return the valid empty cells on the
+        outer ring where that same number may be placed.
+        """
+        if inner_pos is None:
+            return []
+
+        r, c = inner_pos
+        candidates = []
+
+        # Row ends
+        candidates.append((r, 0))
+        candidates.append((r, 6))
+
+        # Column ends
+        candidates.append((0, c))
+        candidates.append((6, c))
+
+        # Diagonal ends (only if the number lies on a major diagonal)
+        if r == c:
+            candidates.append((0, 0))
+            candidates.append((6, 6))
+
+        if r + c == 6:
+            candidates.append((0, 6))
+            candidates.append((6, 0))
+
+        # Unique + empty only
+        out = []
+        for cell in candidates:
+            if cell not in out:
+                rr, cc = cell
+                if 0 <= rr < 7 and 0 <= cc < 7 and board7[rr][cc] == 0:
+                    out.append(cell)
+        return out

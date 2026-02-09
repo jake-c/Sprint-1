@@ -1,16 +1,12 @@
 #main.py
 #Entry point of the application.
-#cordinates UI, game logic, and storage.
+
 
 # main.py
-from ui import GameUI
-
-def main():
-    ui = GameUI(size=5)
-    ui.start()
+from ui_level1 import GameUILevel1
 
 if __name__ == "__main__":
-    main()
+    GameUILevel1().start()
 
 
 
