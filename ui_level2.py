@@ -183,7 +183,6 @@ class GameUILevel2:
 
     # ---------------- Level 2 rules ----------------
     def get_valid_cells_for_next(self):
-        # Find the position of the target number in the inner board
         inner_pos = self.logic.find_number(self.board, self.next_number)
         return self.logic.get_valid_outer_cells(self.board, inner_pos)
 
@@ -221,7 +220,6 @@ class GameUILevel2:
         # Dead-end condition: no valid cells for the next number
         if len(self.get_valid_cells_for_next()) == 0:
             messagebox.showinfo("Game Over", "No valid moves remaining for the next number.")
-            # Do not log as 'completed successfully'
             return
 
     def handle_level_complete(self):
@@ -236,8 +234,16 @@ class GameUILevel2:
         except Exception:
             pass
 
-        messagebox.showinfo("Level Complete", "Level 2 complete! Completed game was logged.")
-        self.root.destroy()
+        messagebox.showinfo("Level Complete", "Level 2 complete! Launching Level 3...")
+
+        # Launch Level 3 using this final board (outer ring becomes the constraints)
+        try:
+            from ui_level3 import GameUILevel3
+            self.root.destroy()
+            GameUILevel3(board7=self.board, player_name=self.player_name).start()
+        except Exception:
+            # If Level 3 file isn't present, just close cleanly
+            self.root.destroy()
 
     # ---------------- Save / Load ----------------
     def save_game_data(self):
@@ -248,7 +254,6 @@ class GameUILevel2:
             messagebox.showerror("Error", "Failed to save Level 2.")
 
     def find_outer_position(self, number: int):
-        # Search only the outer ring for an already-placed number
         for r in range(self.size):
             for c in range(self.size):
                 if self.is_outer_cell(r, c) and self.board[r][c] == number:
@@ -262,7 +267,6 @@ class GameUILevel2:
             self.next_number = next_number
             self.score = score
 
-            # rebuild undo stack from outer placements 2..(next_number-1)
             self.turns_outer = []
             for k in range(2, self.next_number):
                 pos = self.find_outer_position(k)
@@ -280,7 +284,7 @@ class GameUILevel2:
 
         r, c, num = self.turns_outer.pop()
         self.board[r][c] = 0
-        self.next_number = num  # revert to the undone number
+        self.next_number = num
         if self.score > 0:
             self.score -= 1
         self.refresh_board()
@@ -289,7 +293,6 @@ class GameUILevel2:
         if not messagebox.askyesno("Reset Level 2", "Reset Level 2 outer ring?"):
             return
 
-        # clear only outer ring
         for r in range(self.size):
             for c in range(self.size):
                 if self.is_outer_cell(r, c):
