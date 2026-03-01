@@ -271,6 +271,35 @@ class GameUILevel1:
         self.board = solved
         self.next_number = 26
         self.refresh_board()
+        # Now trigger the same "Level Complete" flow as if the user finished it
+        name = simpledialog.askstring(
+            "Level Complete",
+            "Level 1 complete!\nEnter player name:"
+        )
+        if not name:
+            name = "Unknown"
+
+        # Log completion
+        self.game_storage.log_completed_game(
+            name=name,
+            level=self.level,
+            score=self.score,
+            board=self.board
+        )
+
+        messagebox.showinfo(
+            "Level Complete",
+            "Level 1 complete!\nLevel 2 is now unlocked."
+        )
+
+    # Launch Level 2
+        try:
+            from ui_level2 import GameUILevel2
+            self.root.destroy()
+            GameUILevel2(player_name=name).start()
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to launch Level 2:\n{e}")
+        
 
     def start(self):
         self.root.mainloop()
