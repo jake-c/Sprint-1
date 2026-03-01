@@ -9,6 +9,7 @@ import os
 
 from logic import GameLogic
 from storage import GameStorage
+from solver import solve_level2
 
 
 # ---------------- Sound (same behavior as Level 1) ----------------
@@ -115,6 +116,8 @@ class GameUILevel2:
                   command=self.undo_game_data).pack(side=tk.LEFT, padx=6)
         tk.Button(self.control_frame, text="Reset", width=9,
                   command=self.reset_game_data).pack(side=tk.LEFT, padx=6)
+        tk.Button(self.control_frame, text="Show Solution", width=12,
+          command=self.show_solution).pack(side=tk.LEFT, padx=6)
 
         self.refresh_board()
 
@@ -303,5 +306,16 @@ class GameUILevel2:
         self.turns_outer = []
         self.refresh_board()
 
+    def show_solution(self):
+        solved = solve_level2(self.board)
+
+        if solved is None:
+            messagebox.showerror("No Solution", "No solution could be found for this board.")
+        return
+
+        self.board = solved
+        self.next_number = 26  # marks level complete visually
+        self.refresh_board()
+    
     def start(self):
         self.root.mainloop()
