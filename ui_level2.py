@@ -316,6 +316,8 @@ class GameUILevel2:
         self.board = solved
         self.next_number = 26  # marks level complete visually
         self.refresh_board()
+        # Automatically move to Level 3
+        self.handle_level_complete()
     
     def start(self):
         self.root.mainloop()
