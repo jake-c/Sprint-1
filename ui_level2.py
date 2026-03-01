@@ -311,7 +311,7 @@ class GameUILevel2:
 
         if solved is None:
             messagebox.showerror("No Solution", "No solution could be found for this board.")
-        return
+            return
 
         self.board = solved
         self.next_number = 26  # marks level complete visually
