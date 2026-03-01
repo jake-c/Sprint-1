@@ -13,6 +13,7 @@ import os
 
 from logic import GameLogic
 from storage import GameStorage
+from solver import solve_level3
 
 
 def play_sound(success: bool):
@@ -128,6 +129,8 @@ class GameUILevel3:
                   command=self.undo_game_data).pack(side=tk.LEFT, padx=6)
         tk.Button(self.control_frame, text="Reset", width=9,
                   command=self.reset_game_data).pack(side=tk.LEFT, padx=6)
+        tk.Button(self.control_frame, text="Show Solution", width=12,
+          command=self.show_solution).pack(side=tk.LEFT, padx=6)
 
         # If we start Level 3 directly, ask for player name once.
         if not self.player_name:
@@ -350,5 +353,17 @@ class GameUILevel3:
         self.refresh_board()
         self.check_dead_end_after_refresh()
 
+    def show_solution(self):
+        solved = solve_level3(self.board)
+
+        if solved is None:
+            messagebox.showerror("No Solution", "No solution could be found for this board.")
+            return
+
+        self.board = solved
+        self.next_number = 26
+        self.dead_end = False
+        self.refresh_board()
+  
     def start(self):
         self.root.mainloop()
