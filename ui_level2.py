@@ -33,7 +33,7 @@ def play_sound(success: bool):
 
 
 class GameUILevel2:
-    def __init__(self, player_name: str | None = None):
+    def __init__(self, player_name: str | None = None, level1_board: list[list[int]] | None = None):
         # Level 2 uses a 7x7 grid: outer ring + inner 5x5
         self.size = 7
         self.level = 2
@@ -102,7 +102,7 @@ class GameUILevel2:
         self.draw_board()
 
         # ---- Initialize inner 5x5 with 1..25 and lock those cells ----
-        self.populate_inner_board()
+        self.populate_inner_board(level1_board)
 
         # ---- Controls ----
         self.control_frame = tk.Frame(self.root, bg=self.bg_main)
@@ -155,12 +155,19 @@ class GameUILevel2:
     def is_outer_cell(self, r, c) -> bool:
         return not self.is_inner_cell(r, c)
 
-    def populate_inner_board(self):
-        num = 1
-        for r in range(1, 6):
-            for c in range(1, 6):
-                self.board[r][c] = num
-                num += 1
+
+    def populate_inner_board(self, prev_board: list[list[int]] | None = None ):
+        #If prev_board is passed we should remap it
+        if prev_board:
+            for r in range(1, 6):
+                for c in range(1, 6):
+                    self.board[r][c] = prev_board[r - 1][c - 1]
+        else:
+            num = 1
+            for r in range(1, 6):
+                for c in range(1, 6):
+                    self.board[r][c] = num
+                    num += 1
 
     def refresh_board(self):
         for r in range(self.size):

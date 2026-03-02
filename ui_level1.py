@@ -4,33 +4,13 @@
 import tkinter as tk
 from tkinter import messagebox, simpledialog
 import random
-import platform
-import os
+
+from ui_helpers import play_sound;
 
 from logic import GameLogic
 from storage import GameStorage
 
 from solver import solve_level1
-
-# ---------------- Sound ----------------
-def play_sound(success):
-    system_name = platform.system()
-
-    if system_name == "Windows":
-        try:
-            import winsound
-            winsound.Beep(700 if success else 200, 200 if success else 400)
-        except ImportError:
-            pass
-    elif system_name == "Darwin":
-        os.system(
-            "afplay /System/Library/Sounds/Glass.aiff &"
-            if success
-            else "afplay /System/Library/Sounds/Basso.aiff &"
-        )
-    elif system_name == "Linux":
-        print('\a')
-
 
 class GameUILevel1:
     def __init__(self, size=5):
@@ -113,7 +93,7 @@ class GameUILevel1:
         tk.Button(self.control_frame, text="Reset", width=9,
                   command=self.reset_game_data).pack(side=tk.LEFT, padx=6)
         tk.Button(self.control_frame, text="Show Solution", width=12,
-          command=self.show_solution).pack(side=tk.LEFT, padx=6)
+                  command=self.show_solution).pack(side=tk.LEFT, padx=6)
 
     # ---------------- UI helpers ----------------
     def draw_board(self):
@@ -190,7 +170,8 @@ class GameUILevel1:
                 try:
                     from ui_level2 import GameUILevel2
                     self.root.destroy()
-                    GameUILevel2(player_name=name).start()
+                    GameUILevel2(player_name=name,
+                                 level1_board=self.board).start()
                 except Exception as e:
                     messagebox.showerror(
                         "Error",
@@ -213,7 +194,8 @@ class GameUILevel1:
 
     def load_game_data(self):
         try:
-            board, next_number, score = self.game_storage.load("savefile", self.size)
+            board, next_number, score = self.game_storage.load(
+                "savefile", self.size)
             self.board = board
             self.next_number = next_number
             self.score = score
@@ -265,7 +247,8 @@ class GameUILevel1:
         solved = solve_level1(self.board)
 
         if solved is None:
-            messagebox.showerror("No Solution", "No solution could be found for this board.")
+            messagebox.showerror(
+                "No Solution", "No solution could be found for this board.")
             return
 
         self.board = solved
@@ -296,11 +279,9 @@ class GameUILevel1:
         try:
             from ui_level2 import GameUILevel2
             self.root.destroy()
-            GameUILevel2(player_name=name).start()
+            GameUILevel2(player_name=name, level1_board=self.board).start()
         except Exception as e:
             messagebox.showerror("Error", f"Failed to launch Level 2:\n{e}")
-        
 
     def start(self):
         self.root.mainloop()
-

@@ -113,7 +113,8 @@ class GameUILevel3:
             self.prepare_level3_from_level2_board()
         else:
             # Fallback: require name and show a message (Level 3 should normally come from Level 2)
-            self.board = [[0 for _ in range(self.size)] for _ in range(self.size)]
+            self.board = [[0 for _ in range(self.size)]
+                          for _ in range(self.size)]
             # place 1 in top-left of inner as default
             self.board[1][1] = 1
 
@@ -130,11 +131,12 @@ class GameUILevel3:
         tk.Button(self.control_frame, text="Reset", width=9,
                   command=self.reset_game_data).pack(side=tk.LEFT, padx=6)
         tk.Button(self.control_frame, text="Show Solution", width=12,
-          command=self.show_solution).pack(side=tk.LEFT, padx=6)
+                  command=self.show_solution).pack(side=tk.LEFT, padx=6)
 
         # If we start Level 3 directly, ask for player name once.
         if not self.player_name:
-            self.player_name = simpledialog.askstring("Player Name", "Enter player name for Level 3:")
+            self.player_name = simpledialog.askstring(
+                "Player Name", "Enter player name for Level 3:")
             if not self.player_name:
                 self.player_name = "Unknown"
 
@@ -227,7 +229,8 @@ class GameUILevel3:
     def on_cell_click(self, r, c):
         if self.dead_end:
             play_sound(False)
-            messagebox.showinfo("Dead End", "No valid placements. Use Undo to continue.")
+            messagebox.showinfo(
+                "Dead End", "No valid placements. Use Undo to continue.")
             return
 
         if not self.is_inner_cell(r, c):
@@ -238,7 +241,8 @@ class GameUILevel3:
             messagebox.showinfo("Invalid Move", "Cell already filled.")
             return
 
-        ok, pts, msg = self.logic.place_number_level3(self.board, self.next_number, r, c)
+        ok, pts, msg = self.logic.place_number_level3(
+            self.board, self.next_number, r, c)
         if not ok:
             play_sound(False)
             messagebox.showinfo("Invalid Move", msg or "Invalid placement.")
@@ -261,7 +265,8 @@ class GameUILevel3:
             valid = self.get_valid_cells_for_next()
             if len(valid) == 0:
                 self.dead_end = True
-                messagebox.showinfo("Dead End", "No valid placements remain. Use Undo to continue.")
+                messagebox.showinfo(
+                    "Dead End", "No valid placements remain. Use Undo to continue.")
 
     def handle_level_complete(self):
         try:
@@ -274,13 +279,15 @@ class GameUILevel3:
         except Exception:
             pass
 
-        messagebox.showinfo("Level Complete", "Level 3 complete! Completed game was logged.")
+        messagebox.showinfo(
+            "Level Complete", "Level 3 complete! Completed game was logged.")
         self.root.destroy()
 
     # ---------------- Save / Load ----------------
     def save_game_data(self):
         try:
-            self.game_storage.save("savefile_level3", self.board, self.next_number, self.score)
+            self.game_storage.save(
+                "savefile_level3", self.board, self.next_number, self.score)
             messagebox.showinfo("Success", "Level 3 saved successfully!")
         except Exception:
             messagebox.showerror("Error", "Failed to save Level 3.")
@@ -295,7 +302,8 @@ class GameUILevel3:
 
     def load_game_data(self):
         try:
-            board, next_number, score = self.game_storage.load("savefile_level3", size=7)
+            board, next_number, score = self.game_storage.load(
+                "savefile_level3", size=7)
             self.board = board
             self.next_number = next_number
             self.score = score
@@ -357,13 +365,14 @@ class GameUILevel3:
         solved = solve_level3(self.board)
 
         if solved is None:
-            messagebox.showerror("No Solution", "No solution could be found for this board.")
+            messagebox.showerror(
+                "No Solution", "No solution could be found for this board.")
             return
 
         self.board = solved
         self.next_number = 26
         self.dead_end = False
         self.refresh_board()
-  
+
     def start(self):
         self.root.mainloop()
