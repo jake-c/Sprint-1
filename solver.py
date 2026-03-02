@@ -90,7 +90,7 @@ def _bt_level2(logic, board7, num):
     return False
 
 
-def _bt_level3(logic, board7, num):
+def _bt_level3(logic: GameLogic, board7, num):
     if num > 25:
         return True
 

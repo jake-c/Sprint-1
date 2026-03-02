@@ -65,7 +65,8 @@ class GameLogic:
             if abs(pr - r) > 1 or abs(pc - c) > 1:
                 return False, 0, "Must be adjacent."
 
-        points = self.score_for_placement(board, number - 1, r, c) if number > 1 else 0
+        points = self.score_for_placement(
+            board, number - 1, r, c) if number > 1 else 0
         board[r][c] = number
         self.turns.append((r, c))
         return True, points, ""
@@ -182,14 +183,14 @@ class GameLogic:
         if ring_pos is None:
             return []
 
-        # IMPORTANT: in Level 3, previous number must be located in the INNER 5x5 only
+        # Previous number must be the INNER one (not the ring copy)
         prev_pos = self.find_number_in_inner_7x7(board7, next_number - 1)
         if prev_pos is None:
             return []
 
         pr, pc = prev_pos
 
-        # Start from Level 1 adjacency around previous number (inner only)
+        # Level 1 adjacency candidates around previous inner number
         candidates = []
         for dr in (-1, 0, 1):
             for dc in (-1, 0, 1):
@@ -200,12 +201,17 @@ class GameLogic:
                 if self.is_inner_5x5_of_7x7(r, c) and board7[r][c] == 0:
                     candidates.append((r, c))
 
-        # Apply ring row/col restriction
-        filtered = [(r, c) for (r, c) in candidates if self.ring_constraint_allows_cell(ring_pos, r, c)]
-
-        # If ring position is a corner (yellow), require placement on main diagonal(s)
+        # Rule #3 (row/column intersection) applies only to NON-corner ring cells.
+        # Rule #4 (yellow corner ring cells) replaces it with diagonal-board constraint.
         if self.is_outer_corner_7x7(*ring_pos):
-            filtered = [(r, c) for (r, c) in filtered if self.on_main_diagonals_7x7(r, c)]
+            filtered = [(r, c)
+                        for (r, c) in candidates if self.on_main_diagonals_7x7(r, c)]
+        else:
+            filtered = [
+                (r, c)
+                for (r, c) in candidates
+                if self.ring_constraint_allows_cell(ring_pos, r, c)
+            ]
 
         return filtered
 
@@ -261,7 +267,8 @@ class GameLogic:
 
         if removed_number > 2:
             # check score impact using INNER previous number
-            prev_inner = self.find_number_in_inner_7x7(board7, removed_number - 1)
+            prev_inner = self.find_number_in_inner_7x7(
+                board7, removed_number - 1)
             if prev_inner is not None:
                 pr, pc = prev_inner
                 if (r, c) in self.diagonal_corners(pr, pc):
