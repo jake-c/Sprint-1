@@ -102,6 +102,13 @@ class GameUILevel3:
         )
         self.next_label.pack(side=tk.LEFT, padx=16)
 
+        # --- Rules ---
+        root = tk.Tk()
+        root.geometry("400x400")
+        root.after(100, lambda: messagebox.showinfo("Level 3 Rules:", "1. The inner 5x5 starts with only one cell filled and the player must fill in the rest \n2." \
+        " The rules of level 1 are the same, however you must work backwards and fill in the squares that can be placed using the information from level 2\n" \
+        "3. In case a deadend occurs before 25 is placed, you need to undo one or more cells and try again"))
+
         # --- Timer ---
         self.time_left = time_limit
         self.timer_id = None
