@@ -5,18 +5,21 @@ import tkinter as tk
 from tkinter import messagebox, simpledialog
 import random
 
-from ui_helpers import play_sound;
+from ui_helpers import play_sound
 
 from logic import GameLogic
 from storage import GameStorage
 
 from solver import solve_level1
 
+
 class GameUILevel1:
-    def __init__(self, size=5):
+    def __init__(self, size=5, time_limit=60):
+        self.starting_time = time_limit
         self.size = size
         self.logic = GameLogic(size=size)
         self.game_storage = GameStorage()
+        self.solve_cells = set() # cells filled with solution
 
         # ---- Game state ----
         self.board = [[0 for _ in range(size)] for _ in range(size)]
@@ -63,6 +66,17 @@ class GameUILevel1:
         )
         self.next_label.pack(side=tk.LEFT, padx=20)
 
+        # --- Timer ---
+        self.time_left = time_limit 
+        self.timer_id = None
+
+        self.timer_label = tk.Label(
+            self.info_frame, text=f"Time: {self.time_left}",
+            font=("Helvetica", 14, "bold"),
+            fg="red", bg=self.bg_main
+        )
+        self.timer_label.pack(side=tk.LEFT, padx=20)
+
         # ---- Board ----
         self.board_frame = tk.Frame(self.root, bg=self.bg_main)
         self.board_frame.pack(padx=16, pady=10)
@@ -74,7 +88,6 @@ class GameUILevel1:
         r = random.randint(0, size - 1)
         c = random.randint(0, size - 1)
         self.board[r][c] = 1
-        # self.logic.turns.append((r, c))
         self.next_number = 2
         self.one_pos = (r, c)
 
@@ -95,7 +108,27 @@ class GameUILevel1:
         tk.Button(self.control_frame, text="Show Solution", width=12,
                   command=self.show_solution).pack(side=tk.LEFT, padx=6)
 
+        self.update_timer()
+
+    def stop_timer(self):
+        # Check if the timer is currently running
+        if getattr(self, "timer_id", None):
+            self.root.after_cancel(self.timer_id)
+            self.timer_id = None
+
+    def update_timer(self):
+        if self.check_level_complete():
+            return  # Stop the timer if they win
+
+        self.time_left -= 1
+        self.timer_label.config(text=f"Time: {self.time_left}")
+        if self.time_left < 0:
+            self.score -= 1
+            self.timer_label.config(fg="darkred") # color in red to notify the user of time
+        self.timer_id = self.root.after(1000, self.update_timer)
+
     # ---------------- UI helpers ----------------
+
     def draw_board(self):
         for r in range(self.size):
             row = []
@@ -121,9 +154,15 @@ class GameUILevel1:
         for r in range(self.size):
             for c in range(self.size):
                 val = self.board[r][c]
+                if val != 0 and (r, c) in self.solve_cells:
+                    color = "#caf5a5"
+                elif val != 0:
+                    color = self.bg_tile_filled
+                else:
+                    color = self.bg_tile_empty
                 self.buttons[r][c].config(
                     text=str(val) if val != 0 else "",
-                    bg=self.bg_tile_filled if val != 0 else self.bg_tile_empty
+                    bg=color
                 )
 
         self.score_label.config(text=f"Score: {self.score}")
@@ -153,6 +192,10 @@ class GameUILevel1:
                 if not name:
                     name = "Unknown"
 
+                self.stop_timer()
+                if self.time_left > 0:
+                    self.score += self.time_left
+
                 # User Story 7 logging
                 self.game_storage.log_completed_game(
                     name=name,
@@ -171,7 +214,7 @@ class GameUILevel1:
                     from ui_level2 import GameUILevel2
                     self.root.destroy()
                     GameUILevel2(player_name=name,
-                                 level1_board=self.board, acc_score=self.score).start()
+                                 level1_board=self.board, acc_score=self.score, time_limit=self.starting_time).start()
                 except Exception as e:
                     messagebox.showerror(
                         "Error",
@@ -182,7 +225,7 @@ class GameUILevel1:
             play_sound(False)
             messagebox.showinfo("Invalid Move", message)
 
-    # ---------------- Save / Load ----------------
+    # Save/Load
     def save_game_data(self):
         try:
             self.game_storage.save(
@@ -233,23 +276,38 @@ class GameUILevel1:
         if not messagebox.askyesno("Reset Game", "Are you sure you want to reset Level 1?"):
             return
 
+        cells_placed = len(self.logic.turns)
         self.board = [[0 for _ in range(self.size)] for _ in range(self.size)]
         self.logic.turns = []
-        self.score = 0
+        self.score -= cells_placed
 
         r, c = self.one_pos
         self.board[r][c] = 1
-        self.logic.turns.append((r, c))
         self.next_number = 2
         self.refresh_board()
+
+        return
 
     def show_solution(self):
         solved = solve_level1(self.board)
 
         if solved is None:
-            messagebox.showerror(
-                "No Solution", "No solution could be found for this board.")
-            return
+            # Clear cells and solve from scratch
+            blank = [[0]*self.size for _ in range(self.size)]
+            r, c = self.one_pos
+            blank[r][c] = 1
+            solved = solve_level1(blank)
+            if solved is None:
+                messagebox.showerror("No Solution", "No solution could be found for this board.")
+                return
+            self.board = blank
+
+        # Record which cells the solver filled
+        self.solve_cells = set()
+        for r in range(self.size):
+            for c in range(self.size):
+                if self.board[r][c] == 0 and solved[r][c] != 0:
+                    self.solve_cells.add((r, c))
 
         self.board = solved
         self.next_number = 26
@@ -275,12 +333,13 @@ class GameUILevel1:
             "Level 1 complete!\nLevel 2 is now unlocked."
         )
 
-    # Launch Level 2
+        # Launch Level 2
         try:
             from ui_level2 import GameUILevel2
             self.root.destroy()
             print(self.score)
-            GameUILevel2(player_name=name, level1_board=self.board, acc_score=self.score).start()
+            GameUILevel2(player_name=name, level1_board=self.board,
+                         acc_score=self.score, time_limit=self.starting_time).start()
         except Exception as e:
             messagebox.showerror("Error", f"Failed to launch Level 2:\n{e}")
 

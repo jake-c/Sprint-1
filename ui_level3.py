@@ -36,7 +36,8 @@ def play_sound(success: bool):
 
 
 class GameUILevel3:
-    def __init__(self, board7=None, player_name: str | None = None, acc_score = 0):
+    def __init__(self, board7=None, player_name: str | None = None, acc_score=0, time_limit=60):
+        self.starting_time = time_limit
         self.size = 7
         self.level = 3
 
@@ -44,6 +45,7 @@ class GameUILevel3:
         self.game_storage = GameStorage()
 
         self.player_name = player_name
+        self.solve_cells = set() # cells filled with solution
 
         # ---- Game state ----
         self.board = [[0 for _ in range(self.size)] for _ in range(self.size)]
@@ -54,7 +56,6 @@ class GameUILevel3:
         # We'll use logic.turns as the turn stack for Level 3 placements
         self.logic.turns = []
 
-        print("SCEOIIIFJWEIFCEW",  self.score)
         # ---- Colors ----
         self.bg_main = "#f7f8fa"
         self.bg_tile_outer = "#e0e0e0"          # locked ring
@@ -101,6 +102,16 @@ class GameUILevel3:
         )
         self.next_label.pack(side=tk.LEFT, padx=16)
 
+        # --- Timer ---
+        self.time_left = time_limit
+        self.timer_id = None
+
+        self.timer_label = tk.Label(
+            self.info_frame, text=f"Time: {self.time_left}",
+            font=("Helvetica", 14, "bold"),
+            fg="red", bg=self.bg_main
+        )
+        self.timer_label.pack(side=tk.LEFT, padx=20)
         # ---- Board ----
         self.board_frame = tk.Frame(self.root, bg=self.bg_main)
         self.board_frame.pack(padx=16, pady=10)
@@ -144,6 +155,24 @@ class GameUILevel3:
 
         self.refresh_board()
         self.check_dead_end_after_refresh()
+
+        self.update_timer()
+
+    def stop_timer(self):
+        # Check if the timer is currently running
+        if getattr(self, "timer_id", None):
+            self.root.after_cancel(self.timer_id)
+            self.timer_id = None
+
+    def update_timer(self):
+        if self.next_number == 26:
+            return
+        self.time_left -= 1
+        self.timer_label.config(text=f"Time: {self.time_left}")
+        if self.time_left < 0:
+            self.score -= 1
+            self.timer_label.config(fg="darkred") # color in red to notify the user of time
+        self.timer_id = self.root.after(1000, self.update_timer)
 
     # ---------------- UI helpers ----------------
     def draw_board(self):
@@ -215,10 +244,16 @@ class GameUILevel3:
                             bg=self.bg_tile_inner_locked
                         )
                     else:
+                        if val != 0 and (r, c) in self.solve_cells:
+                            color = "#caf5a5"
+                        elif val != 0:
+                            color = self.bg_tile_filled
+                        else:
+                            color = self.bg_tile_inner
                         self.buttons[r][c].config(
                             state="normal",
                             text=str(val) if val != 0 else "",
-                            bg=self.bg_tile_filled if val != 0 else self.bg_tile_inner
+                            bg=color
                         )
 
         self.score_label.config(text=f"Score: {self.score}")
@@ -257,7 +292,7 @@ class GameUILevel3:
         self.refresh_board()
 
         if self.next_number == 26:
-            self.handle_level_complete()
+            self.handle_level_complete(from_solution=False)
             return
 
         self.check_dead_end_after_refresh()
@@ -270,7 +305,14 @@ class GameUILevel3:
                 messagebox.showinfo(
                     "Dead End", "No valid placements remain. Use Undo to continue.")
 
-    def handle_level_complete(self):
+    def handle_level_complete(self, from_solution):
+
+        # Calculate the final score if the time is left (if time is over it's already handled)
+        self.stop_timer()
+        if self.time_left > 0 and not from_solution:
+            self.score += self.time_left
+
+        # Log the game
         try:
             self.game_storage.log_completed_game(
                 name=self.player_name or "Unknown",
@@ -285,7 +327,7 @@ class GameUILevel3:
             "Level Complete", "Level 3 complete! Completed game was logged.")
         self.root.destroy()
 
-    # ---------------- Save / Load ----------------
+    # Save/Load
     def save_game_data(self):
         try:
             self.game_storage.save(
@@ -356,8 +398,9 @@ class GameUILevel3:
         else:
             self.board[1][1] = 1
 
+        cells_placed = len(self.logic.turns)
         self.next_number = 2
-        self.score = self.acc_score
+        self.score -= cells_placed
         self.dead_end = False
         self.logic.turns = []
         self.refresh_board()
@@ -367,14 +410,36 @@ class GameUILevel3:
         solved = solve_level3(self.board)
 
         if solved is None:
-            messagebox.showerror(
-                "No Solution", "No solution could be found for this board.")
-            return
+            # Clear cells and solve from scratch
+            blank = [row[:] for row in self.board]
+            one_pos = self.logic.find_number(self.board, 1)
+            for r in range(1, 6):
+                for c in range(1, 6):
+                    blank[r][c] = 0
+            if one_pos and self.is_inner_cell(*one_pos):
+                blank[one_pos[0]][one_pos[1]] = 1
+            else:
+                blank[1][1] = 1
+            self.logic.turns = []
+            self.next_number = 2
+            solved = solve_level3(blank)
+            if solved is None:
+                messagebox.showerror("No Solution", "No solution could be found for this board.")
+                return
+            self.board = blank
+
+        # Record which cells the solver filled
+        self.solve_cells = set()
+        for r in range(self.size):
+            for c in range(self.size):
+                if self.board[r][c] == 0 and solved[r][c] != 0:
+                    self.solve_cells.add((r, c))
 
         self.board = solved
         self.next_number = 26
         self.dead_end = False
         self.refresh_board()
+        self.handle_level_complete(from_solution=True)
 
     def start(self):
         self.root.mainloop()

@@ -32,12 +32,14 @@ class GameLogic:
             (r + 1, c + 1)
         ]
 
+    # Return the score for placement
     def score_for_placement(self, board, prev_num, r, c):
         prev_pos = self.find_number(board, prev_num)
         if not prev_pos:
             return 0
         return 1
 
+    # Undo command
     def undo(self, board):
         if not self.turns:
             raise Exception("No turns to undo.")
@@ -47,6 +49,7 @@ class GameLogic:
         board[r][c] = 0
         return True, -1
 
+    # Function to check if the number can be placed in specific cell
     def place_number(self, board, number, r, c):
         if board[r][c] != 0:
             return False, 0, "Cell already filled."
@@ -56,13 +59,14 @@ class GameLogic:
             if abs(pr - r) > 1 or abs(pc - c) > 1:
                 return False, 0, "Must be adjacent."
 
+        # If placement valid, calculate score
         points = self.score_for_placement(
             board, number - 1, r, c) if number > 1 else 0
         board[r][c] = number
         self.turns.append((r, c))
         return True, points, ""
 
-    # ---------------- Level 2 helpers ----------------
+    # Level 2 helpers
     def get_valid_outer_cells(self, board7, inner_pos):
         """
         Level 2: given a 7x7 board and the position (r,c) of the target number
@@ -101,7 +105,7 @@ class GameLogic:
                     out.append(cell)
         return out
 
-    # ---------------- Level 3 helpers ----------------
+    # Level 3 helpers
     def is_inner_5x5_of_7x7(self, r, c):
         return 1 <= r <= 5 and 1 <= c <= 5
 
@@ -142,16 +146,16 @@ class GameLogic:
         Use the ring position of the number to restrict placement in the inner 5x5.
 
         Deterministic rule:
-        - If number is on LEFT or RIGHT edge of ring -> must place in SAME ROW (inner)
-        - If number is on TOP or BOTTOM edge of ring -> must place in SAME COLUMN (inner)
+        - If number is on left or right edge of ring -> must place in SAME ROW (inner)
+        - If number is on top or botton edge of ring -> must place in SAME COLUMN (inner)
         """
         rr, cc = ring_pos
 
-        # Left / Right edge => same row
+        # Left/Right edge => same row
         if cc == 0 or cc == 6:
             return target_r == rr
 
-        # Top / Bottom edge => same column
+        # Top/Bottom edge => same column
         if rr == 0 or rr == 6:
             return target_c == cc
 
@@ -174,7 +178,7 @@ class GameLogic:
         if ring_pos is None:
             return []
 
-        # Previous number must be the INNER one (not the ring copy)
+        # Previous number must be the inner one (not the ring copy)
         prev_pos = self.find_number_in_inner_7x7(board7, next_number - 1)
         if prev_pos is None:
             return []
@@ -206,6 +210,7 @@ class GameLogic:
 
         return filtered
 
+    # Function to check all the requirements of cell placement
     def place_number_level3(self, board7, number, r, c):
         """
         Place 'number' in Level 3 inside the inner 5x5.
@@ -231,25 +236,24 @@ class GameLogic:
         if (r, c) not in valid:
             return False, 0, "Invalid placement."
 
-        # IMPORTANT: Level 3 scoring must reference the INNER previous number, not the ring copy
+        # IMPORTANT: Level 3 scoring must reference the inner previous number, not the ring copy
         prev_inner = self.find_number_in_inner_7x7(board7, number - 1)
         if prev_inner is None:
             points = 0
         else:
             pr, pc = prev_inner
-            points = 1 if (r, c) in self.diagonal_corners(pr, pc) else 0
+            points = 1
 
         board7[r][c] = number
         self.turns.append((r, c))
         return True, points, ""
 
+    # Undo function for level 3
     def undo_level3(self, board7):
-        """
-        Undo last Level 3 placement.
-        """
         if not self.turns:
             raise Exception("No turns to undo.")
 
+        # Empty the cell
         r, c = self.turns.pop()
 
         board7[r][c] = 0
