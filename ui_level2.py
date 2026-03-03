@@ -76,6 +76,16 @@ class GameUILevel2:
         )
         self.next_label.pack(side=tk.LEFT, padx=16)
 
+        # --- Rules ---
+        root = tk.Tk()
+        root.geometry("400x400")
+        root.after(100, lambda: messagebox.showinfo("Level 2 Rules:", "1. Given a 5x5 board with all numbers filled.\n" \
+        "2. Fill in the cells in the outer ring with numbers 2 to 25\n3. Because every number in the inner 5x5 board is placed at the intersection of one row " \
+        "and one column, the number to be placed in the outer ring can only go to either end of the row or column of the number (i.e. one of 4 blue cells)\n" \
+        "4. If the number in the inner 5x5 board is placed in a cell which also belongs to one of the two longest diagonals of the board," \
+        "the number can also be placed in either of the two yellow cells of the diagonal in the outer ring\n5. Game over if the outer ring of 24 cells is successfully" \
+        "filled with numbers"))
+
         # --- Timer ---
         self.time_left = time_limit
         self.timer_id = None
