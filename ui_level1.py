@@ -14,7 +14,8 @@ from solver import solve_level1
 
 
 class GameUILevel1:
-    def __init__(self, size=5, time_limit=60):
+    def __init__(self, size=5, time_limit=60, player_name=None):
+        self.player_name = player_name
         self.starting_time = time_limit
         self.size = size
         self.logic = GameLogic(size=size)
@@ -312,13 +313,8 @@ class GameUILevel1:
         self.board = solved
         self.next_number = 26
         self.refresh_board()
-        # Now trigger the same "Level Complete" flow as if the user finished it
-        name = simpledialog.askstring(
-            "Level Complete",
-            "Level 1 complete!\nEnter player name:"
-        )
-        if not name:
-            name = "Unknown"
+        # Game is finished, name is the one that is equal to the username entered in the auth stage
+        name = self.player_name or "Unknown"
 
         # Log completion
         self.game_storage.log_completed_game(

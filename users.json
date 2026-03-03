@@ -1,0 +1,12 @@
+{
+  "users": {
+    "jake": {
+      "salt": "tp8CaakZSesSRzopCXP9LA==",
+      "hash": "p3d1zVFDaXtsizdhFYZxisZ9Wh8+D0hN7SK/W4b2B9g="
+    },
+    "Jake2": {
+      "salt": "jwv1cKdLm9zO/7o8EWuu9w==",
+      "hash": "JweaXMX7jmpDExuKaqSmKmL0LICFZDBQyYf2gV9ImKg="
+    }
+  }
+}
