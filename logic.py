@@ -36,29 +36,20 @@ class GameLogic:
         prev_pos = self.find_number(board, prev_num)
         if not prev_pos:
             return 0
-        return 1 if (r, c) in self.diagonal_corners(*prev_pos) else 0
+        return 1
 
     def undo(self, board):
         if not self.turns:
             raise Exception("No turns to undo.")
 
         r, c = self.turns.pop()
-        points = 0
-
-        if self.turns:
-            prev_number = len(self.turns)
-            if self.score_for_placement(board, prev_number, r, c):
-                points -= 1
-
+                
         board[r][c] = 0
-        return True, points
+        return True, -1
 
     def place_number(self, board, number, r, c):
         if board[r][c] != 0:
             return False, 0, "Cell already filled."
-
-        if number != len(self.turns) + 1:
-            return False, 0, "Wrong number."
 
         if number > 1:
             pr, pc = self.find_number(board, number - 1)
@@ -261,18 +252,5 @@ class GameLogic:
 
         r, c = self.turns.pop()
 
-        # Determine which number we removed: it was (len(turns)+2) before pop
-        removed_number = len(self.turns) + 3  # after pop
-        points = 0
-
-        if removed_number > 2:
-            # check score impact using INNER previous number
-            prev_inner = self.find_number_in_inner_7x7(
-                board7, removed_number - 1)
-            if prev_inner is not None:
-                pr, pc = prev_inner
-                if (r, c) in self.diagonal_corners(pr, pc):
-                    points -= 1
-
         board7[r][c] = 0
-        return True, points
+        return True, -1

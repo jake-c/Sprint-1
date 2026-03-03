@@ -74,7 +74,7 @@ class GameUILevel1:
         r = random.randint(0, size - 1)
         c = random.randint(0, size - 1)
         self.board[r][c] = 1
-        self.logic.turns.append((r, c))
+        # self.logic.turns.append((r, c))
         self.next_number = 2
         self.one_pos = (r, c)
 
@@ -171,7 +171,7 @@ class GameUILevel1:
                     from ui_level2 import GameUILevel2
                     self.root.destroy()
                     GameUILevel2(player_name=name,
-                                 level1_board=self.board).start()
+                                 level1_board=self.board, acc_score=self.score).start()
                 except Exception as e:
                     messagebox.showerror(
                         "Error",
@@ -279,7 +279,8 @@ class GameUILevel1:
         try:
             from ui_level2 import GameUILevel2
             self.root.destroy()
-            GameUILevel2(player_name=name, level1_board=self.board).start()
+            print(self.score)
+            GameUILevel2(player_name=name, level1_board=self.board, acc_score=self.score).start()
         except Exception as e:
             messagebox.showerror("Error", f"Failed to launch Level 2:\n{e}")
 

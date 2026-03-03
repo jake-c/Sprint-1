@@ -4,40 +4,18 @@
 
 import tkinter as tk
 from tkinter import messagebox, simpledialog
-import platform
-import os
+from ui_helpers import play_sound
 
 from logic import GameLogic
 from storage import GameStorage
 from solver import solve_level2
 
-
-# ---------------- Sound (same behavior as Level 1) ----------------
-def play_sound(success: bool):
-    system_name = platform.system()
-
-    if system_name == "Windows":
-        try:
-            import winsound
-            winsound.Beep(700 if success else 200, 200 if success else 400)
-        except Exception:
-            pass
-    elif system_name == "Darwin":
-        os.system(
-            "afplay /System/Library/Sounds/Glass.aiff &"
-            if success
-            else "afplay /System/Library/Sounds/Basso.aiff &"
-        )
-    elif system_name == "Linux":
-        print('\a')
-
-
 class GameUILevel2:
-    def __init__(self, player_name: str | None = None, level1_board: list[list[int]] | None = None):
+    def __init__(self, player_name: str | None = None, level1_board: list[list[int]] | None = None, acc_score = 0):
         # Level 2 uses a 7x7 grid: outer ring + inner 5x5
         self.size = 7
         self.level = 2
-
+        self.acc_score = acc_score
         self.logic = GameLogic(size=5)  # Level 1 size doesn't matter for Level 2 helpers
         self.game_storage = GameStorage()
 
@@ -46,7 +24,7 @@ class GameUILevel2:
         # ---- Game state ----
         self.board = [[0 for _ in range(self.size)] for _ in range(self.size)]
         self.next_number = 2  # numbers 2..25 to be placed on outer ring
-        self.score = 0
+        self.score = acc_score
         self.turns_outer = []  # stack of (r, c, number) for undo
 
         # ---- Colors (match refined light scheme) ----
@@ -250,7 +228,8 @@ class GameUILevel2:
         try:
             from ui_level3 import GameUILevel3
             self.root.destroy()
-            GameUILevel3(board7=self.board, player_name=self.player_name).start()
+            print(self.score)
+            GameUILevel3(board7=self.board, player_name=self.player_name, acc_score=self.score).start()
         except Exception:
             # If Level 3 file isn't present, just close cleanly
             self.root.destroy()
@@ -276,6 +255,7 @@ class GameUILevel2:
             self.board = board
             self.next_number = next_number
             self.score = score
+            self.acc_score = score
 
             self.turns_outer = []
             for k in range(2, self.next_number):
@@ -309,7 +289,7 @@ class GameUILevel2:
                     self.board[r][c] = 0
 
         self.next_number = 2
-        self.score = 0
+        self.score = self.acc_score
         self.turns_outer = []
         self.refresh_board()
 

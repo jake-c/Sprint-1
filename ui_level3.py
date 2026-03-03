@@ -36,7 +36,7 @@ def play_sound(success: bool):
 
 
 class GameUILevel3:
-    def __init__(self, board7=None, player_name: str | None = None):
+    def __init__(self, board7=None, player_name: str | None = None, acc_score = 0):
         self.size = 7
         self.level = 3
 
@@ -48,11 +48,13 @@ class GameUILevel3:
         # ---- Game state ----
         self.board = [[0 for _ in range(self.size)] for _ in range(self.size)]
         self.next_number = 2
-        self.score = 0
+        self.score = acc_score
+        self.acc_score = acc_score
         self.dead_end = False  # when no valid moves, require Undo
         # We'll use logic.turns as the turn stack for Level 3 placements
         self.logic.turns = []
 
+        print("SCEOIIIFJWEIFCEW",  self.score)
         # ---- Colors ----
         self.bg_main = "#f7f8fa"
         self.bg_tile_outer = "#e0e0e0"          # locked ring
@@ -83,7 +85,7 @@ class GameUILevel3:
 
         self.score_label = tk.Label(
             self.info_frame,
-            text="Score: 0",
+            text=f"Score: {self.score}",
             font=("Helvetica", 14, "bold"),
             fg=self.text_primary,
             bg=self.bg_main
@@ -188,7 +190,7 @@ class GameUILevel3:
 
         # Ensure we start placing 2
         self.next_number = 2
-        self.score = 0
+        self.score = self.acc_score
         self.dead_end = False
         self.logic.turns = []
 
@@ -355,7 +357,7 @@ class GameUILevel3:
             self.board[1][1] = 1
 
         self.next_number = 2
-        self.score = 0
+        self.score = self.acc_score
         self.dead_end = False
         self.logic.turns = []
         self.refresh_board()
