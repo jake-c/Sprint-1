@@ -67,6 +67,15 @@ class GameUILevel1:
         )
         self.next_label.pack(side=tk.LEFT, padx=20)
 
+        # --- Rules ---
+        root = tk.Tk()
+        root.geometry("400x400")
+        root.after(100, lambda: messagebox.showinfo("Level 1 Rules:", "1. 1 will be randomly placed in one of the cells\n" \
+        "2. Fill in the rest of the cells in the order from 2 to 25, one per cell until end\n3. The successor (e.g. 3) must be only one step away from its" \
+        " predecessor (e.g. 2) in any direction including diagonal cells\n4. Game over if number 25 is successfully placed. In case a deadend occurs before 25" \
+        " is placed, you need to undo one or more cells and try again\n5. You earn one point whenever a number is placed at one of the diagonal corner cells" \
+        "of its predecessor and earn zero points otherwise"))
+
         # --- Timer ---
         self.time_left = time_limit 
         self.timer_id = None
