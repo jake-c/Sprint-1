@@ -214,9 +214,46 @@ class GameUILevel1:
                     board=self.board
                 )
 
+                # --- Leaderboard ---
+                games = []
+                with open("completed_games.log", "r") as file:
+                    content = file.read()
+
+                # Split into individual game blocks
+                blocks = content.split("=== Completed Game ===")
+
+                for block in blocks:
+                    if not block.strip():
+                        continue
+
+                    lines = block.strip().splitlines()
+                    player = None
+                    score = None
+
+                    for line in lines:
+                        if line.startswith("Player:"):
+                            player = line.split("Player:")[1].strip()
+                        elif line.startswith("Score:"):
+                            score = int(line.split("Score:")[1].strip())
+
+                    if player is not None and score is not None:
+                        games.append((player, score))
+
+                # Sort by score descending
+                games.sort(key=lambda x: x[1], reverse=True)
+
+                # Take top 5
+                top_5 = games[:5]
+
+                # Format output
+                result = "Leaderboard:\n"
+                for name, score in top_5:
+                    result += f"{name} {score}\n"
+
                 messagebox.showinfo(
                     "Level Complete",
-                    "Level 1 complete!\nLevel 2 is now unlocked."
+                    "Level 1 complete!\nLevel 2 is now unlocked.\n" \
+                    f"{result}"
                 )
 
                 # Launch Level 2
