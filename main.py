@@ -54,7 +54,7 @@ def auth_gate_tk():
             ok, msg = auth.register(username, password)
             # Show result message
             messagebox.showinfo("Register", msg)
-            # If register succeeds, we can allow the user to play
+            # If register succeeds, allow the user to play
             if ok:
                 root.destroy()
                 return username
@@ -67,7 +67,7 @@ def auth_gate_tk():
                 root.destroy()
                 return username
 
-        # If we reach here, login/register failed, so loop again.
+        # Reaching here means login/register failed, so loop again.
 
 if __name__ == "__main__":
     # User must login
@@ -95,9 +95,10 @@ if __name__ == "__main__":
             if time_limit < 5:
                 time_limit = 5
         except ValueError:
-            # If they user letters like "abc", default to 60
+            # If they use letters like "abc", default to 60
             time_limit = 60
 
     temp_root.destroy()
+
 
     GameUILevel1(time_limit=time_limit, player_name=logged_in_user).start()
