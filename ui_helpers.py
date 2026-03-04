@@ -3,14 +3,11 @@ import os
 import threading
 
 
-# ---------------- Sound ----------------
-
-# To improve the game feel, dispatch audio on another thread, eliminating UI freeze.
-
-
+# Function to play the sound based on success value (True/False)
 def _play_sound(success):
     system_name = platform.system()
 
+    # Windows
     if system_name == "Windows":
         try:
             import winsound
@@ -19,6 +16,7 @@ def _play_sound(success):
         except ImportError:
             pass
 
+    # MacOS
     elif system_name == "Darwin":
         os.system(
             "afplay /System/Library/Sounds/Glass.aiff &"
@@ -26,6 +24,7 @@ def _play_sound(success):
             else "afplay /System/Library/Sounds/Basso.aiff &"
         )
 
+    # Linux
     elif system_name == "Linux":
         print("\a", end="", flush=True)
 

@@ -14,25 +14,7 @@ import os
 from logic import GameLogic
 from storage import GameStorage
 from solver import solve_level3
-
-
-def play_sound(success: bool):
-    system_name = platform.system()
-
-    if system_name == "Windows":
-        try:
-            import winsound
-            winsound.Beep(700 if success else 200, 200 if success else 400)
-        except Exception:
-            pass
-    elif system_name == "Darwin":
-        os.system(
-            "afplay /System/Library/Sounds/Glass.aiff &"
-            if success
-            else "afplay /System/Library/Sounds/Basso.aiff &"
-        )
-    elif system_name == "Linux":
-        print('\a')
+from ui_helpers import play_sound
 
 
 class GameUILevel3:
@@ -47,7 +29,7 @@ class GameUILevel3:
         self.player_name = player_name
         self.solve_cells = set() # cells filled with solution
 
-        # ---- Game state ----
+        # Game state
         self.board = [[0 for _ in range(self.size)] for _ in range(self.size)]
         self.next_number = 2
         self.score = acc_score
@@ -56,7 +38,7 @@ class GameUILevel3:
         # We'll use logic.turns as the turn stack for Level 3 placements
         self.logic.turns = []
 
-        # ---- Colors ----
+        # Colors
         self.bg_main = "#f7f8fa"
         self.bg_tile_outer = "#e0e0e0"          # locked ring
         self.bg_tile_inner = "#ffffff"          # playable inner
@@ -65,13 +47,13 @@ class GameUILevel3:
         self.bg_hover = "#dde7f5"
         self.text_primary = "#1f2933"
 
-        # ---- Window ----
+        # Window
         self.root = tk.Tk()
         self.root.title("Number Placement Game – Level 3")
         self.root.resizable(False, False)
         self.root.configure(bg=self.bg_main)
 
-        # ---- Info bar ----
+        # Info bar
         self.info_frame = tk.Frame(self.root, bg=self.bg_main)
         self.info_frame.pack(pady=12)
 
@@ -102,14 +84,12 @@ class GameUILevel3:
         )
         self.next_label.pack(side=tk.LEFT, padx=16)
 
-        # --- Rules ---
-        root = tk.Tk()
-        root.geometry("400x400")
-        root.after(100, lambda: messagebox.showinfo("Level 3 Rules:", "1. The inner 5x5 starts with only one cell filled and the player must fill in the rest \n2." \
+        # Rules
+        messagebox.showinfo("Level 3 Rules:", "1. The inner 5x5 starts with only one cell filled and the player must fill in the rest \n2." \
         " The rules of level 1 are the same, however you must work backwards and fill in the squares that can be placed using the information from level 2\n" \
-        "3. In case a deadend occurs before 25 is placed, you need to undo one or more cells and try again"))
+        "3. In case a deadend occurs before 25 is placed, you need to undo one or more cells and try again")
 
-        # --- Timer ---
+        # Timer
         self.time_left = time_limit
         self.timer_id = None
 
@@ -119,14 +99,14 @@ class GameUILevel3:
             fg="red", bg=self.bg_main
         )
         self.timer_label.pack(side=tk.LEFT, padx=20)
-        # ---- Board ----
+        # Board
         self.board_frame = tk.Frame(self.root, bg=self.bg_main)
         self.board_frame.pack(padx=16, pady=10)
 
         self.buttons = []
         self.draw_board()
 
-        # ---- Initialize from Level 2 final board ----
+        # Initializing from Level 2 final board
         # Outer ring preserved; inner cleared except 1 stays where it was.
         if board7 is not None:
             self.board = [row[:] for row in board7]
@@ -138,7 +118,7 @@ class GameUILevel3:
             # place 1 in top-left of inner as default
             self.board[1][1] = 1
 
-        # ---- Controls ----
+        # Controls
         self.control_frame = tk.Frame(self.root, bg=self.bg_main)
         self.control_frame.pack(pady=16)
 
@@ -243,7 +223,7 @@ class GameUILevel3:
                         bg=self.bg_tile_outer
                     )
                 else:
-                    # inner 5x5: playable except the "1"
+                    # inner 5x5: everything is playable except the "1"
                     if val == 1:
                         self.buttons[r][c].config(
                             state="disabled",
@@ -266,7 +246,7 @@ class GameUILevel3:
         self.score_label.config(text=f"Score: {self.score}")
         self.next_label.config(text=f"Next: {self.next_number}")
 
-    # ---------------- Level 3 rules ----------------
+    # Level 3 rules
     def get_valid_cells_for_next(self):
         return self.logic.get_valid_level3_cells(self.board, self.next_number)
 

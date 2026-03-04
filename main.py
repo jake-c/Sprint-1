@@ -1,52 +1,22 @@
-# main.py
-# ============================================================
-# ORIGINAL PURPOSE:
-# - Ask user for a timer duration using a Tkinter popup
-# - Start Level 1 UI (GameUILevel1)
-#
-# AUTH CHANGE (User Story: Admin authentication / registered players):
-# - New players MUST register before they can play.
-# - Returning players MUST login before they can play.
-# - Only after successful login do we proceed to the timer prompt + game start.
-# ============================================================
-
 import tkinter as tk
-from tkinter import simpledialog
+from tkinter import simpledialog, messagebox
 
 from ui_level1 import GameUILevel1
 
-# =========================
-# AUTH CHANGE START
-# =========================
-# We import UserAuth from storage.py (the class we added there).
-# This handles:
-# - register(username, password)
-# - authenticate(username, password)
+# Import UserAuth from storage.py for authentication and registration
 from storage import UserAuth
 
 
 def auth_gate_tk():
-    """
-    Tkinter-based login/register gate.
-
-    Returns:
-        username (str) if login succeeds
-        None if user cancels/closes the dialogs
-
-    Why Tk dialogs?
-    - Your project is already using Tkinter dialogs for timer setup,
-      so using dialogs for login/register keeps the UX consistent.
-    """
 
     auth = UserAuth("users.json")
 
-    # Create a hidden root for dialogs (like you already do).
+    # Create a root for dialogs
     root = tk.Tk()
     root.withdraw()
 
     while True:
-        # Ask whether they want to login or register.
-        # They must choose one to proceed.
+        # Asking the user whether they want to login or register
         choice = simpledialog.askstring(
             "Authentication Required",
             "Welcome!\n\nType one of the following:\n"
@@ -63,7 +33,7 @@ def auth_gate_tk():
         choice = choice.strip().lower()
 
         if choice not in ("login", "register"):
-            # Loop again until they type a valid option
+            # Loop again until they enter a valid option
             continue
 
         # Ask for username + password
@@ -72,8 +42,7 @@ def auth_gate_tk():
             root.destroy()
             return None
 
-        # NOTE: Tkinter simpledialog does not mask input like a password field.
-        # This is fine for a class project offline requirement.
+        # Password processing
         password = simpledialog.askstring("Password", "Enter your password:")
         if password is None:
             root.destroy()
@@ -84,8 +53,8 @@ def auth_gate_tk():
         if choice == "register":
             ok, msg = auth.register(username, password)
             # Show result message
-            simpledialog.messagebox.showinfo("Register", msg) if hasattr(simpledialog, "messagebox") else None
-            # If register succeeds, we can immediately allow play (logged in)
+            messagebox.showinfo("Register", msg)
+            # If register succeeds, we can allow the user to play
             if ok:
                 root.destroy()
                 return username
@@ -93,32 +62,19 @@ def auth_gate_tk():
         elif choice == "login":
             ok, msg = auth.authenticate(username, password)
             # Show result message
-            simpledialog.messagebox.showinfo("Login", msg) if hasattr(simpledialog, "messagebox") else None
+            messagebox.showinfo("Login", msg)
             if ok:
                 root.destroy()
                 return username
 
         # If we reach here, login/register failed, so loop again.
 
-
-# =========================
-# AUTH CHANGE END
-# =========================
-
-
 if __name__ == "__main__":
-    # ============================================================
-    # AUTH CHANGE:
-    # - Must authenticate BEFORE playing (before timer setup and before launching UI).
-    # ============================================================
+    # User must login
     logged_in_user = auth_gate_tk()
     if logged_in_user is None:
-        # User cancelled authentication
         raise SystemExit(0)
 
-    # ============================================================
-    # ORIGINAL CODE BELOW (Timer popup) — kept in place.
-    # ============================================================
     temp_root = tk.Tk()
     temp_root.withdraw()
 
@@ -144,10 +100,4 @@ if __name__ == "__main__":
 
     temp_root.destroy()
 
-    # ============================================================
-    # AUTH CHANGE:
-    # - We pass player_name into Level 1 UI so the game can "recognize" the player.
-    # - If your GameUILevel1 __init__ does NOT accept player_name yet,
-    #   you must add it there (I can do that next if you paste ui_level1.py).
-    # ============================================================
     GameUILevel1(time_limit=time_limit, player_name=logged_in_user).start()

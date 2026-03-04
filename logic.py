@@ -1,6 +1,5 @@
 # logic.py
 # Handles all game rules and scoring logic.
-# This class does NOT deal with user input or file I/O.
 
 class GameLogic:
     def __init__(self, size=5):
@@ -24,6 +23,7 @@ class GameLogic:
                     return (r, c)
         return None
 
+    # Not in Level 3 because of the new rule with scoring
     def diagonal_corners(self, r, c):
         return [
             (r - 1, c - 1),
@@ -118,37 +118,25 @@ class GameLogic:
     def on_main_diagonals_7x7(self, r, c):
         return (r == c) or (r + c == 6)
 
+    # Find value only on the outer ring
     def find_number_on_outer_ring(self, board7, value):
-        """
-        Find value ONLY on the outer ring of the 7x7 board.
-        This avoids accidentally finding the same number after it's placed inside.
-        """
         for r in range(7):
             for c in range(7):
                 if self.is_outer_ring_cell_7x7(r, c) and board7[r][c] == value:
                     return (r, c)
         return None
 
+    # Find value only in the inner board
     def find_number_in_inner_7x7(self, board7, value):
-        """
-        Find value ONLY in the inner 5x5 (rows/cols 1..5) of a 7x7 board.
-        Level 3 needs this because numbers also appear on the outer ring.
-        """
         for r in range(1, 6):
             for c in range(1, 6):
                 if board7[r][c] == value:
                     return (r, c)
         return None
 
+    # If number is on left or right edge of ring => must place in same row (inner)
+    # If number is on top or botton edge of ring => must place in same column (inner)
     def ring_constraint_allows_cell(self, ring_pos, target_r, target_c):
-        """
-        Level 3 Rule #3:
-        Use the ring position of the number to restrict placement in the inner 5x5.
-
-        Deterministic rule:
-        - If number is on left or right edge of ring -> must place in SAME ROW (inner)
-        - If number is on top or botton edge of ring -> must place in SAME COLUMN (inner)
-        """
         rr, cc = ring_pos
 
         # Left/Right edge => same row
@@ -161,16 +149,8 @@ class GameLogic:
 
         return False
 
+    # Returns valid inner cells for placing next_number in Level 3
     def get_valid_level3_cells(self, board7, next_number):
-        """
-        Returns valid inner cells for placing next_number in Level 3.
-
-        Assumes:
-        - board7 is 7x7
-        - outer ring contains the Level 2 final placements (2..25)
-        - inner 5x5 is empty except for 1 and any already placed 2..k
-        - next_number is in [2..25]
-        """
         if next_number < 2 or next_number > 25:
             return []
 
@@ -178,7 +158,7 @@ class GameLogic:
         if ring_pos is None:
             return []
 
-        # Previous number must be the inner one (not the ring copy)
+        # Previous number must be the inner one
         prev_pos = self.find_number_in_inner_7x7(board7, next_number - 1)
         if prev_pos is None:
             return []
@@ -196,8 +176,6 @@ class GameLogic:
                 if self.is_inner_5x5_of_7x7(r, c) and board7[r][c] == 0:
                     candidates.append((r, c))
 
-        # Rule #3 (row/column intersection) applies only to NON-corner ring cells.
-        # Rule #4 (yellow corner ring cells) replaces it with diagonal-board constraint.
         if self.is_outer_corner_7x7(*ring_pos):
             filtered = [(r, c)
                         for (r, c) in candidates if self.on_main_diagonals_7x7(r, c)]
@@ -212,13 +190,6 @@ class GameLogic:
 
     # Function to check all the requirements of cell placement
     def place_number_level3(self, board7, number, r, c):
-        """
-        Place 'number' in Level 3 inside the inner 5x5.
-        Level 3 places 2..25 in order, with 1 already on the board.
-
-        We use self.turns for Level 3 placements only (2..25).
-        Required number = len(self.turns) + 2
-        """
         if not (0 <= r < 7 and 0 <= c < 7):
             return False, 0, "Out of bounds."
 
@@ -236,7 +207,7 @@ class GameLogic:
         if (r, c) not in valid:
             return False, 0, "Invalid placement."
 
-        # IMPORTANT: Level 3 scoring must reference the inner previous number, not the ring copy
+        # Level 3 scoring must reference the inner previous number, not the ring copy
         prev_inner = self.find_number_in_inner_7x7(board7, number - 1)
         if prev_inner is None:
             points = 0

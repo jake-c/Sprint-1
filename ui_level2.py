@@ -25,13 +25,13 @@ class GameUILevel2:
         self.player_name = player_name  # carry over from Level 1 if available
         self.solve_cells = set() # cells filled with solution
 
-        # ---- Game state ----
+        # Game state
         self.board = [[0 for _ in range(self.size)] for _ in range(self.size)]
         self.next_number = 2  # numbers 2..25 to be placed on outer ring
         self.score = acc_score
         self.turns_outer = []  # stack of (r, c, number) for undo
 
-        # ---- Colors (match refined light scheme) ----
+        # Colors (match refined light scheme)
         self.bg_main = "#f7f8fa"
         self.bg_tile_outer = "#ffffff"
         self.bg_tile_outer_filled = "#e8f0fe"
@@ -39,13 +39,13 @@ class GameUILevel2:
         self.bg_hover = "#dde7f5"
         self.text_primary = "#1f2933"
 
-        # ---- Window ----
+        # Window
         self.root = tk.Tk()
         self.root.title("Number Placement Game – Level 2")
         self.root.resizable(False, False)
         self.root.configure(bg=self.bg_main)
 
-        # ---- Info bar ----
+        # Info bar
         self.info_frame = tk.Frame(self.root, bg=self.bg_main)
         self.info_frame.pack(pady=12)
 
@@ -76,17 +76,15 @@ class GameUILevel2:
         )
         self.next_label.pack(side=tk.LEFT, padx=16)
 
-        # --- Rules ---
-        root = tk.Tk()
-        root.geometry("400x400")
-        root.after(100, lambda: messagebox.showinfo("Level 2 Rules:", "1. Given a 5x5 board with all numbers filled.\n" \
+        # Rules
+        messagebox.showinfo("Level 2 Rules:", "1. Given a 5x5 board with all numbers filled.\n" \
         "2. Fill in the cells in the outer ring with numbers 2 to 25\n3. Because every number in the inner 5x5 board is placed at the intersection of one row " \
         "and one column, the number to be placed in the outer ring can only go to either end of the row or column of the number (i.e. one of 4 blue cells)\n" \
         "4. If the number in the inner 5x5 board is placed in a cell which also belongs to one of the two longest diagonals of the board," \
         "the number can also be placed in either of the two yellow cells of the diagonal in the outer ring\n5. Game over if the outer ring of 24 cells is successfully" \
-        "filled with numbers"))
+        "filled with numbers")
 
-        # --- Timer ---
+        # Timer
         self.time_left = time_limit
         self.timer_id = None
 
@@ -97,17 +95,17 @@ class GameUILevel2:
         )
         self.timer_label.pack(side=tk.LEFT, padx=20)
 
-        # ---- Board ----
+        # Board
         self.board_frame = tk.Frame(self.root, bg=self.bg_main)
         self.board_frame.pack(padx=16, pady=10)
 
         self.buttons = []
         self.draw_board()
 
-        # ---- Initialize inner 5x5 with 1..25 and lock those cells ----
+        # Initialize inner 5x5 with 1..25 and lock those cells
         self.populate_inner_board(level1_board)
 
-        # ---- Controls ----
+        # Controls
         self.control_frame = tk.Frame(self.root, bg=self.bg_main)
         self.control_frame.pack(pady=16)
 
@@ -219,7 +217,7 @@ class GameUILevel2:
         self.score_label.config(text=f"Score: {self.score}")
         self.next_label.config(text=f"Next: {self.next_number}")
 
-    # ---------------- Level 2 rules ----------------
+    # Level 2 rules
     def get_valid_cells_for_next(self):
         inner_pos = self.logic.find_number(self.board, self.next_number)
         return self.logic.get_valid_outer_cells(self.board, inner_pos)
@@ -245,7 +243,7 @@ class GameUILevel2:
         self.board[r][c] = self.next_number
         self.turns_outer.append((r, c, self.next_number))
 
-        # Simple scoring: +1 per correct placement
+        # +1 per correct placement
         self.score += 1
 
         play_sound(True)
@@ -257,14 +255,14 @@ class GameUILevel2:
             self.handle_level_complete(False)
             return
 
-        # Dead-end condition: no valid cells for the next number
+        # Dead-end: no valid cells for the next number
         if len(self.get_valid_cells_for_next()) == 0:
             messagebox.showinfo(
                 "Game Over", "No valid moves remaining for the next number.")
             return
 
     def handle_level_complete(self, from_solution):
-        # Log completed Level 2 game (User Story 7 applies to all levels)
+        # Log completed Level 2 game
         self.stop_timer()
         if not from_solution and self.time_left > 0:
             self.score += self.time_left
@@ -286,7 +284,6 @@ class GameUILevel2:
         try:
             from ui_level3 import GameUILevel3
             self.root.destroy()
-            print(self.score)
             GameUILevel3(board7=self.board, player_name=self.player_name,
                          acc_score=self.score, time_limit=self.starting_time).start()
         except Exception:

@@ -7,6 +7,18 @@
     "Jake2": {
       "salt": "jwv1cKdLm9zO/7o8EWuu9w==",
       "hash": "JweaXMX7jmpDExuKaqSmKmL0LICFZDBQyYf2gV9ImKg="
+    },
+    "Anelle1": {
+      "salt": "1ZCo0I3YmEcgsuk4ojk24w==",
+      "hash": "JNtiu0ReZGHGghIthFMXo/697pSHKl7vfzCjgYRgYH4="
+    },
+    "Anelle2": {
+      "salt": "a3fdb77fbbd0a165e419e295669adf73",
+      "hash": "4e131890bdf0394c83d4d200d163832bbeb68f6f944c1f37fa5c3a225187c426"
+    },
+    "Anelle4": {
+      "salt": "2090da35f18e74360c3384532fd4143a",
+      "hash": "7087efce9c4009e884ef0aa115d184f26b8031be7d5d12989e39ad0d8d50ddef"
     }
   }
 }

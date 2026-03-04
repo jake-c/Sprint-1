@@ -2,9 +2,7 @@
 from copy import deepcopy
 from logic import GameLogic
 
-# ----------------------------
 # Helpers to detect start number
-# ----------------------------
 def _next_number_level1(board5):
     # Level 1: numbers are on 5x5 only
     max_seen = 0
@@ -44,9 +42,7 @@ def _next_number_level3(board7):
     return max_seen + 1
 
 
-# ----------------------------
 # Backtracking solvers
-# ----------------------------
 def _bt_level1(logic, board, num):
     if num > 25:
         return True
@@ -73,7 +69,7 @@ def _bt_level2(logic, board7, num):
     if num > 25:
         return True
 
-    # Find the number INSIDE the inner 5x5 (it’s pre-filled 1..25 in Level 2)
+    # Find the number inside the inner 5x5 (it’s pre-filled 1..25 in Level 2)
     inner_pos = logic.find_number(board7, num)
     if inner_pos is None:
         return False
@@ -106,9 +102,7 @@ def _bt_level3(logic: GameLogic, board7, num):
     return False
 
 
-# ----------------------------
-# Public functions used by UI
-# ----------------------------
+# Public functions used in UI
 def solve_level1(board5):
     temp = deepcopy(board5)
     logic = GameLogic(size=5)
@@ -120,7 +114,7 @@ def solve_level1(board5):
     ok = _bt_level1(logic, temp, start_num)
     return temp if ok else None
 
-
+# Function to solve level 2
 def solve_level2(board7):
     temp = deepcopy(board7)
     logic = GameLogic(size=5)
@@ -129,7 +123,7 @@ def solve_level2(board7):
     ok = _bt_level2(logic, temp, start_num)
     return temp if ok else None
 
-
+# Function to solve level 3
 def solve_level3(board7):
     temp = deepcopy(board7)
     logic = GameLogic(size=5)

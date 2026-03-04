@@ -22,27 +22,27 @@ class GameUILevel1:
         self.game_storage = GameStorage()
         self.solve_cells = set() # cells filled with solution
 
-        # ---- Game state ----
+        # Game state
         self.board = [[0 for _ in range(size)] for _ in range(size)]
         self.next_number = 1
         self.score = 0
         self.level = 1
         self.one_pos = None
 
-        # ---- Colors ----
+        # Colors
         self.bg_main = "#f7f8fa"
         self.bg_tile_empty = "#ffffff"
         self.bg_tile_filled = "#e8f0fe"
         self.bg_hover = "#dde7f5"
         self.text_primary = "#1f2933"
 
-        # ---- Window ----
+        # Window
         self.root = tk.Tk()
         self.root.title("Number Placement Game – Level 1")
         self.root.resizable(False, False)
         self.root.configure(bg=self.bg_main)
 
-        # ---- Info bar ----
+        # Info bar
         self.info_frame = tk.Frame(self.root, bg=self.bg_main)
         self.info_frame.pack(pady=12)
 
@@ -67,16 +67,14 @@ class GameUILevel1:
         )
         self.next_label.pack(side=tk.LEFT, padx=20)
 
-        # --- Rules ---
-        root = tk.Tk()
-        root.geometry("400x400")
-        root.after(100, lambda: messagebox.showinfo("Level 1 Rules:", "1. 1 will be randomly placed in one of the cells\n" \
+        # Rules
+        messagebox.showinfo("Level 1 Rules:", "1. 1 will be randomly placed in one of the cells\n" \
         "2. Fill in the rest of the cells in the order from 2 to 25, one per cell until end\n3. The successor (e.g. 3) must be only one step away from its" \
         " predecessor (e.g. 2) in any direction including diagonal cells\n4. Game over if number 25 is successfully placed. In case a deadend occurs before 25" \
-        " is placed, you need to undo one or more cells and try again\n5. You earn one point whenever a number is placed at one of the diagonal corner cells" \
-        "of its predecessor and earn zero points otherwise"))
+        " is placed, you need to undo one or more cells and try again\n5. You earn one point whenever a number is placed at the valid cell and earn zero points otherwise." \
+        " Time is either added/substracted as extra scores at the end of each level.")
 
-        # --- Timer ---
+        # Timer
         self.time_left = time_limit 
         self.timer_id = None
 
@@ -87,14 +85,14 @@ class GameUILevel1:
         )
         self.timer_label.pack(side=tk.LEFT, padx=20)
 
-        # ---- Board ----
+        # Board
         self.board_frame = tk.Frame(self.root, bg=self.bg_main)
         self.board_frame.pack(padx=16, pady=10)
 
         self.buttons = []
         self.draw_board()
 
-        # ---- Place first number randomly ----
+        # Place first number randomly
         r = random.randint(0, size - 1)
         c = random.randint(0, size - 1)
         self.board[r][c] = 1
@@ -103,7 +101,7 @@ class GameUILevel1:
 
         self.refresh_board()
 
-        # ---- Controls ----
+        # Controls
         self.control_frame = tk.Frame(self.root, bg=self.bg_main)
         self.control_frame.pack(pady=16)
 
@@ -178,7 +176,7 @@ class GameUILevel1:
         self.score_label.config(text=f"Score: {self.score}")
         self.next_label.config(text=f"Next: {self.next_number}")
 
-    # ---------------- Game logic ----------------
+    # Game logic
     def check_level_complete(self):
         return self.next_number == 26
 
@@ -193,7 +191,7 @@ class GameUILevel1:
             self.next_number += 1
             self.refresh_board()
 
-            # -------- Level 1 completion --------
+            # Level 1 completion
             if self.check_level_complete():
                 name = simpledialog.askstring(
                     "Level Complete",
@@ -206,7 +204,7 @@ class GameUILevel1:
                 if self.time_left > 0:
                     self.score += self.time_left
 
-                # User Story 7 logging
+                # Logging
                 self.game_storage.log_completed_game(
                     name=name,
                     level=self.level,
@@ -214,7 +212,7 @@ class GameUILevel1:
                     board=self.board
                 )
 
-                # --- Leaderboard ---
+                # Leaderboard
                 games = []
                 with open("completed_games.log", "r") as file:
                     content = file.read()
@@ -247,8 +245,8 @@ class GameUILevel1:
 
                 # Format output
                 result = "Leaderboard:\n"
-                for name, score in top_5:
-                    result += f"{name} {score}\n"
+                for p_name, p_score in top_5:
+                    result += f"{p_name} {p_score}\n"
 
                 messagebox.showinfo(
                     "Level Complete",
@@ -309,6 +307,7 @@ class GameUILevel1:
         except Exception:
             messagebox.showerror("Error", "Failed to load")
 
+    # Undo button logic with score change
     def undo_game_data(self):
         try:
             success, score_change = self.logic.undo(self.board)
@@ -319,6 +318,7 @@ class GameUILevel1:
         except Exception:
             messagebox.showerror("Error", "Cannot undo")
 
+    # Reset game logic
     def reset_game_data(self):
         if not messagebox.askyesno("Reset Game", "Are you sure you want to reset Level 1?"):
             return
@@ -379,7 +379,6 @@ class GameUILevel1:
         try:
             from ui_level2 import GameUILevel2
             self.root.destroy()
-            print(self.score)
             GameUILevel2(player_name=name, level1_board=self.board,
                          acc_score=self.score, time_limit=self.starting_time).start()
         except Exception as e:
