@@ -35,7 +35,7 @@ class GameUILevel3:
         self.score = acc_score
         self.acc_score = acc_score
         self.dead_end = False  # when no valid moves, require Undo
-        # We'll use logic.turns as the turn stack for Level 3 placements
+        # Uses logic.turns as the turn stack for Level 3 placements
         self.logic.turns = []
 
         # Colors
@@ -107,7 +107,7 @@ class GameUILevel3:
         self.draw_board()
 
         # Initializing from Level 2 final board
-        # Outer ring preserved; inner cleared except 1 stays where it was.
+        # Outer ring preserved; inner cleared except 1 stays where it was
         if board7 is not None:
             self.board = [row[:] for row in board7]
             self.prepare_level3_from_level2_board()
@@ -133,7 +133,7 @@ class GameUILevel3:
         tk.Button(self.control_frame, text="Show Solution", width=12,
                   command=self.show_solution).pack(side=tk.LEFT, padx=6)
 
-        # If we start Level 3 directly, ask for player name once.
+        # If Level 3 is started directly, ask for player name once.
         if not self.player_name:
             self.player_name = simpledialog.askstring(
                 "Player Name", "Enter player name for Level 3:")
@@ -204,7 +204,7 @@ class GameUILevel3:
         else:
             self.board[1][1] = 1
 
-        # Ensure we start placing 2
+        # Ensure 2 is placed at the start
         self.next_number = 2
         self.score = self.acc_score
         self.dead_end = False
@@ -294,7 +294,7 @@ class GameUILevel3:
 
     def handle_level_complete(self, from_solution):
 
-        # Calculate the final score if the time is left (if time is over it's already handled)
+        # Calculates the final score if the time is left (if time is over it's already handled)
         self.stop_timer()
         if self.time_left > 0 and not from_solution:
             self.score += self.time_left
